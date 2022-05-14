@@ -4,7 +4,10 @@
   "description": "HiSudoku backend software, provides access to puzzles collection and user data",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "lint": "./node_modules/.bin/eslint .",
+    "lint:fix": "./node_modules/.bin/eslint . --fix",
+    "dev": "nodemon index.js"
   },
   "repository": {
     "type": "git",
@@ -15,5 +18,13 @@
   "bugs": {
     "url": "https://github.com/KrzysztofDamianBasior/hisudoku-api/issues"
   },
-  "homepage": "https://github.com/KrzysztofDamianBasior/hisudoku-api#readme"
+  "homepage": "https://github.com/KrzysztofDamianBasior/hisudoku-api#readme",
+  "devDependencies": {
+    "eslint": "^8.15.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "jest": "^28.1.0",
+    "nodemon": "^2.0.16",
+    "prettier": "^2.6.2"
+  }
 }
