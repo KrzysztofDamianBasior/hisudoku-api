@@ -1,0 +1,19 @@
+{
+  "name": "hisudoku-api",
+  "version": "0.0.0",
+  "description": "HiSudoku backend software, provides access to puzzles collection and user data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/KrzysztofDamianBasior/hisudoku-api.git"
+  },
+  "author": "Krzysztof Basior <KrzysztofDamianBasior@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/KrzysztofDamianBasior/hisudoku-api/issues"
+  },
+  "homepage": "https://github.com/KrzysztofDamianBasior/hisudoku-api#readme"
+}
