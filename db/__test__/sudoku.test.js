@@ -3,7 +3,6 @@ const user = require('../models/user')
 const mongoose = require('mongoose')
 const server = require('mongodb-memory-server')
 
-
 let gate = false
 const setUp = async () => {
     const dbServer = await server.MongoMemoryServer.create() 
@@ -47,14 +46,15 @@ afterAll(async () => {
   await dropDatabase(databaseServer);
 });
 
-describe("Test sudoku model", () => {
-  it("create and save sudoku successfully", async () => {
+describe("Mongodb sudoku model", () => {
+  it("should create and save sudoku successfully", async () => {
     
     const userData = {
         username: "testName",
         email: "testEmail@gmail.com",
         password: "123"
     }
+
     const User = mongoose.model('User', user.userSchema)
     const testUser = await User.create(userData)
 
@@ -75,13 +75,14 @@ describe("Test sudoku model", () => {
     expect(testSudoku.favoritedBy).toEqual(sudokuData.favoritedBy)
   });
 
-  it("insert sudoku successfully, but the field not defined in schema should be undefined", async () => {
+  it("should insert sudoku successfully, but the field not defined in the schema should be undefined", async () => {
 
     const userData = {
         username: "testName",
         email: "testEmail@gmail.com",
         password: "123"
     }
+
     const User = mongoose.model('User', user.userSchema)
     const testUser = await User.create(userData)
 
@@ -98,10 +99,9 @@ describe("Test sudoku model", () => {
 
     expect(testSudoku._id).toBeDefined()
     expect(testSudoku.size).toBeUndefined()
-
   });
 
-  it("create sudoku without required field should failed", async () => {
+  it("should should failed after creating a sudoku without required field ", async () => {
     const userData = {
         username: "testName",
         email: "testEmail@gmail.com",

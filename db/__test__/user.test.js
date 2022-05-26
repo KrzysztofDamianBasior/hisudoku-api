@@ -2,7 +2,6 @@ const user = require('../models/user')
 const mongoose = require('mongoose')
 const server = require('mongodb-memory-server')
 
-
 let gate = false
 
 const setUp = async () => {
@@ -48,9 +47,8 @@ afterAll(async () => {
 await dropDatabase(databaseServer);
 });
 
-
-describe("Test user model", () => {
-  it("create and save user successfully", async () => {
+describe("Mongodb user model", () => {
+  it("should create and save user successfully", async () => {
 
     const userData = {
         username: "testName",
@@ -65,7 +63,7 @@ describe("Test user model", () => {
     expect(testUser.password).toBe(userData.password);
   });
 
-  it("insert user successfully, but the field not defined in schema should be undefined", async () => {
+  it("should insert user successfully, but the field not defined in schema should be undefined", async () => {
     
     const userData = {
         username: "testName",
@@ -80,7 +78,7 @@ describe("Test user model", () => {
     expect(testUser.phone).toBeUndefined();
   });
 
-  it("create user without required field should failed", async () => {
+  it("should failed after creating user without required field", async () => {
     let err = undefined
     const userData = {
         username: "testName",
