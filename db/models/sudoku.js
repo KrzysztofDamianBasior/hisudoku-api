@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-module.exports.sudokuSchema = new mongoose.Schema({
+module.exports = new mongoose.Schema({
     content: {
         type: String,
         required: true
