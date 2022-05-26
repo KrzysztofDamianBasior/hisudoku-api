@@ -21,6 +21,7 @@
   "homepage": "https://github.com/KrzysztofDamianBasior/hisudoku-api#readme",
   "devDependencies": {
     "@types/jest": "^27.5.1",
+    "easygraphql-tester": "^6.0.1",
     "eslint": "^8.15.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^4.0.0",
@@ -30,8 +31,16 @@
     "prettier": "^2.6.2"
   },
   "dependencies": {
+    "apollo-server-express": "^3.7.0",
     "bcrypt": "^5.0.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "graphql": "^16.5.0",
+    "graphql-depth-limit": "^1.1.0",
+    "graphql-iso-date": "^3.6.1",
+    "graphql-validation-complexity": "^0.4.2",
+    "helmet": "^5.0.2",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.3.3"
   }
