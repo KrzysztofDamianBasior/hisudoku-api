@@ -1,7 +1,7 @@
 {
-  "extends": ["eslint:recommended", "prettier"],
+  "extends": ["eslint:recommended", "eslint-config-prettier"],
   "parserOptions": {
-    "ecmaVersion": "latest",  
+    "ecmaVersion": "latest",
     "sourceType": "module"
   },
   "env": {
