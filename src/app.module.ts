@@ -7,6 +7,7 @@ import { join } from 'path';
 import { validate } from './env.validation';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MongooseModule } from '@nestjs/mongoose';
         uri: config.get<string>('MONGODB_URI'),
       }),
     }),
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
