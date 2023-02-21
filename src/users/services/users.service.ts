@@ -8,7 +8,7 @@ import { UsersRepository } from '../db/users.repository';
 import { User as DBUser } from '../db/user.schema';
 import { User as GQLUser } from '../models/user.model';
 import * as bcrypt from 'bcrypt';
-import { AuthService } from 'src/auth/auth.service';
+import { AuthService } from 'src/auth/services/auth.service';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

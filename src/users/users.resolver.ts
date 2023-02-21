@@ -3,10 +3,15 @@ import { UsersService } from './services/users.service';
 import { User } from './db/user.schema';
 import { CreateUserInput } from './dto/input/create-user.input';
 import { UpdateUserInput } from './dto/input/update-user.input';
-
+import { Roles } from 'src/auth/roles';
+@Roles('User')
 @Resolver(() => User)
 export class UsersResolver {
   constructor(private readonly usersService: UsersService) {}
+  //   @Get('my-account')
+  //   async getMyAccount(@Request() req) {
+  //     return this.usersService.findById(req.user.sub);
+  //   }
 
   @Mutation(() => User)
   createUser(@Args('createUserInput') createUserInput: CreateUserInput) {
@@ -24,7 +29,9 @@ export class UsersResolver {
   }
 
   //@UseGuards(GqlAuthGuard)
-  //getUser(@CurrentUser() user: Userr,  @Args() getUserArgs: GetUserArgs): User
+  //@UseGuards(RolesGuard)
+  //@UseGuards(JwtAuthGuard)
+  //getUser(@CurrentUser() user: User,  @Args() getUserArgs: GetUserArgs): User
   @Mutation(() => User)
   updateUser(
     @Args('updateUserInput') updateUserInput: UpdateUserInput, //: Promise<User>
