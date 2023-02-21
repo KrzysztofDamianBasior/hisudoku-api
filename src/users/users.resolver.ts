@@ -1,8 +1,8 @@
 import { Resolver, Query, Mutation, Args, Int } from '@nestjs/graphql';
 import { UsersService } from './users.service';
-import { User } from './entities/user.entity';
-import { CreateUserInput } from './dto/create-user.input';
-import { UpdateUserInput } from './dto/update-user.input';
+import { User } from './db/user.schema';
+import { CreateUserInput } from './dto/input/create-user.input';
+import { UpdateUserInput } from './dto/input/update-user.input';
 
 @Resolver(() => User)
 export class UsersResolver {
@@ -13,18 +13,22 @@ export class UsersResolver {
     return this.usersService.create(createUserInput);
   }
 
-  @Query(() => [User], { name: 'users' })
+  @Query(() => [User], { name: 'users', nullable: 'items' })
   findAll() {
     return this.usersService.findAll();
   }
 
-  @Query(() => User, { name: 'user' })
+  @Query(() => User, { name: 'user', nullable: true })
   findOne(@Args('id', { type: () => Int }) id: number) {
     return this.usersService.findOne(id);
   }
 
+  //@UseGuards(GqlAuthGuard)
+  //getUser(@CurrentUser() user: Userr,  @Args() getUserArgs: GetUserArgs): User
   @Mutation(() => User)
-  updateUser(@Args('updateUserInput') updateUserInput: UpdateUserInput) {
+  updateUser(
+    @Args('updateUserInput') updateUserInput: UpdateUserInput, //: Promise<User>
+  ) {
     return this.usersService.update(updateUserInput.id, updateUserInput);
   }
 
