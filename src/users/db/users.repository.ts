@@ -29,8 +29,17 @@ export class UsersRepository {
     return this.userModel.exists({ username });
   }
 
-  async deleteById(userId: string | Types.ObjectId) {
-    return this.userModel.deleteOne({ _id: userId });
+  async removeById(userId: string | Types.ObjectId): Promise<GQLUser> {
+    const user = await this.userModel.findOneAndDelete({ _id: userId });
+    const userData: GQLUser = {
+      id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
   }
 
   async findPasswordByUsername(

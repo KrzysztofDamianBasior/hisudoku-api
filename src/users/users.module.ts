@@ -1,5 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { UsersService } from './users.service';
+import { UsersService } from './services/users.service';
 import { UsersResolver } from './users.resolver';
 import { UsersRepository } from './db/users.repository';
 import { MongooseModule } from '@nestjs/mongoose';
