@@ -118,19 +118,44 @@ export class UsersRepository {
 
   async findUsersByTheirIds({
     ids,
-    offset,
-    perPage,
+    cursor,
+    limit,
   }: {
     ids: string[];
-    offset: number;
-    perPage: number;
+    cursor: string | null;
+    limit: number;
   }): Promise<GQLUser[]> {
-    const usersCollection = await this.userModel
-      .find({ _id: { $in: ids } })
-      .select('_id username email roles createdAt updatedAt')
-      .skip(offset)
-      .limit(perPage)
-      .sort({ createdAt: 'desc' });
+    let hasNextPage = false;
+
+    //if no cursor has been passed, the default query will be empty, it will retrieve the latest notes from the database
+    let cursorQuery = {};
+
+    //if a cursor has been passed, the query will look for notes whose ObjectId value is less than the cursor value
+    if (cursor) {
+      cursorQuery = { _id: { $lt: cursor } };
+    }
+
+    let usersCollection = await this.userModel
+      .find(cursorQuery)
+      .sort({ _id: -1 })
+      .limit(limit + 1);
+
+    if (usersCollection.length > limit) {
+      hasNextPage = true;
+      usersCollection = usersCollection.slice(0, -1);
+    }
+
+    //the cursor is the mongo identifier of the last element in the array
+    const newCursor = usersCollection[usersCollection.length - 1].id;
+
+    // offset based pagination
+    // const usersCollection = await this.userModel
+    //   .find({ _id: { $in: ids } })
+    //   .select('_id username email roles createdAt updatedAt')
+    //   .skip(offset)
+    //   .limit(perPage)
+    //   .sort({ createdAt: 'desc' });
+
     const filteredCollection: GQLUser[] = [];
     for (const user of usersCollection) {
       filteredCollection.push({
