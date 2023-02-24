@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { SudokusResolver } from './sudokus.resolver';
-import { SudokusService } from './sudokus.service';
+import { SudokusService } from './services/sudokus.service';
 
 describe('SudokusResolver', () => {
   let resolver: SudokusResolver;

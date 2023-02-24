@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { FilterQuery, Model, Types } from 'mongoose';
 import { Sudoku as DBSudoku, SudokuDocument } from './sudoku.schema';
@@ -11,6 +11,7 @@ import { User } from 'src/users/models/user.model';
 export class SudokusRepository {
   constructor(
     @InjectModel(DBSudoku.name) private sudokuModel: Model<SudokuDocument>,
+    @Inject(forwardRef(() => UsersRepository))
     private readonly usersRepository: UsersRepository,
   ) {}
 
@@ -78,11 +79,11 @@ export class SudokusRepository {
   }
 
   async findMany({
-    sudokusCursor,
+    sudokuCursor,
     sudokusLimit,
     favoritedByLimit,
   }: {
-    sudokusCursor: string | null;
+    sudokuCursor: string | null;
     sudokusLimit: number; //maximum amount of sudoku returned
     favoritedByLimit: number;
   }): Promise<SudokuFeed> {
@@ -92,8 +93,8 @@ export class SudokusRepository {
     let cursorQuery = {};
 
     //if a cursor has been passed, the query will look for notes whose ObjectId value is less than the cursor value
-    if (sudokusCursor) {
-      cursorQuery = { _id: { $lt: sudokusCursor } };
+    if (sudokuCursor) {
+      cursorQuery = { _id: { $lt: sudokuCursor } };
     }
 
     let dBSudokus = await this.sudokuModel
@@ -131,15 +132,15 @@ export class SudokusRepository {
   }
 
   async findOne({
-    id,
+    sudokuId,
     favoritedByCursor,
     favoritedByLimit,
   }: {
-    id: string;
+    sudokuId: string;
     favoritedByCursor: string | null;
     favoritedByLimit: number;
   }): Promise<GQLSudoku> {
-    const dBSudoku = await this.sudokuModel.findById(id);
+    const dBSudoku = await this.sudokuModel.findById(sudokuId);
     const author = await this.usersRepository.findOneById(dBSudoku.author);
     const favoritedBy = await this.usersRepository.findUsersByTheirIds({
       ids: dBSudoku.favoritedBy.map((id) => id.toString()),
@@ -227,18 +228,18 @@ export class SudokusRepository {
   }
 
   async updateContent({
-    id,
-    content,
+    sudokuId,
+    sudokuContent,
     favoritedByCursor,
     favoritedByLimit,
   }: {
-    id: string | Types.ObjectId;
-    content: string;
+    sudokuId: string | Types.ObjectId;
+    sudokuContent: string;
     favoritedByCursor: string | null;
     favoritedByLimit: number;
   }): Promise<GQLSudoku> {
-    const sudoku = await this.sudokuModel.findById(id);
-    sudoku.content = content;
+    const sudoku = await this.sudokuModel.findById(sudokuId);
+    sudoku.content = sudokuContent;
     const dBSudoku = await sudoku.save();
     const author = await this.usersRepository.findOneById(sudoku.author);
     const favoritedBy = await this.usersRepository.findUsersByTheirIds({
