@@ -1,7 +1,6 @@
-import { Role } from './roles';
-
 export type jwtPayload = {
-  username: string;
+  name: string;
   sub: string;
-  roles: Role[];
+  iss: string;
+  roles: string[];
 };

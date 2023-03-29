@@ -1,11 +1,15 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
+
 import mongoose, { FilterQuery, Model, Types } from 'mongoose';
-import { Sudoku as DBSudoku, SudokuDocument } from './sudoku.schema';
+
 import { UsersRepository } from 'src/users/db/users.repository';
+import { User as GQLUser } from 'src/users/models/user.model';
+import { UserFeed } from 'src/users/models/userFeed.model';
+
+import { Sudoku as DBSudoku, SudokuDocument } from './sudoku.schema';
 import { Sudoku as GQLSudoku } from '../models/sudoku.model';
 import { SudokuFeed } from '../models/sudokuFeed.model';
-import { User } from 'src/users/models/user.model';
 
 @Injectable()
 export class SudokusRepository {
@@ -30,9 +34,9 @@ export class SudokusRepository {
     };
     const newSudoku = new this.sudokuModel(payload);
     const dBSudoku = await newSudoku.save();
-    const author = await this.usersRepository.findOneById(authorId);
+    // const author = await this.usersRepository.findOneById(authorId);
     const gQLsudoku: GQLSudoku = {
-      author,
+      author: dBSudoku.author,
       id: dBSudoku.id,
       createdAt: dBSudoku.createdAt,
       updatedAt: dBSudoku.updatedAt,
@@ -43,49 +47,53 @@ export class SudokusRepository {
     return gQLsudoku;
   }
 
-  async remove(id: string | Types.ObjectId): Promise<GQLSudoku> {
-    return this.sudokuModel.findOneAndDelete({ id });
+  async remove({
+    sudokuId,
+  }: {
+    sudokuId: string | Types.ObjectId;
+  }): Promise<GQLSudoku> {
+    return this.sudokuModel.findOneAndDelete({ sudokuId });
   }
 
   async find({
     sudokusFilterQuery,
-    favoritedByCursor,
-    favoritedByLimit,
   }: {
     sudokusFilterQuery: FilterQuery<DBSudoku>;
-    favoritedByCursor: string | null;
-    favoritedByLimit: number;
+    // favoritedByCursor: string | null;
+    // favoritedByLimit: number;
   }): Promise<GQLSudoku[]> {
     const dBSudokus = await this.sudokuModel.find(sudokusFilterQuery);
     const gQLSudokus: GQLSudoku[] = [];
+
     for (const sudoku of dBSudokus) {
-      const author = await this.usersRepository.findOneById(sudoku.author);
-      const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-        ids: sudoku.favoritedBy.map((id) => id.toString()),
-        cursor: favoritedByCursor,
-        limit: favoritedByLimit,
-      });
+      // const author = await this.usersRepository.findOneById(sudoku.author);
+      // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+      //   ids: sudoku.favoritedBy.map((id) => id.toString()),
+      //   cursor: favoritedByCursor,
+      //   limit: favoritedByLimit,
+      // });
+
       gQLSudokus.push({
-        author,
+        author: sudoku.author,
         id: sudoku.id,
         createdAt: sudoku.createdAt,
         updatedAt: sudoku.updatedAt,
         content: sudoku.content,
         favoriteCount: sudoku.favoriteCount,
-        favoritedBy: favoritedBy,
+        favoritedBy: sudoku.favoritedBy,
       });
     }
     return gQLSudokus;
   }
 
-  async findMany({
+  async sudokuFeed({
     sudokuCursor,
     sudokusLimit,
-    favoritedByLimit,
   }: {
     sudokuCursor: string | null;
     sudokusLimit: number; //maximum amount of sudoku returned
-    favoritedByLimit: number;
+
+    // favoritedByLimit: number;
   }): Promise<SudokuFeed> {
     let hasNextPage = false;
 
@@ -111,20 +119,69 @@ export class SudokusRepository {
     const newCursor = dBSudokus[dBSudokus.length - 1].id;
     const gQLSudokus: GQLSudoku[] = [];
     for (const sudoku of dBSudokus) {
-      const author = await this.usersRepository.findOneById(sudoku.author);
-      const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-        ids: sudoku.favoritedBy.map((id) => id.toString()),
-        cursor: null,
-        limit: favoritedByLimit,
-      });
+      // const author = await this.usersRepository.findOneById(sudoku.author);
+      // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+      //   ids: sudoku.favoritedBy.map((id) => id.toString()),
+      //   cursor: null,
+      //   limit: favoritedByLimit,
+      // });
       gQLSudokus.push({
-        author,
+        author: sudoku.author,
         id: sudoku.id,
         createdAt: sudoku.createdAt,
         updatedAt: sudoku.updatedAt,
         content: sudoku.content,
         favoriteCount: sudoku.favoriteCount,
-        favoritedBy: favoritedBy,
+        favoritedBy: sudoku.favoritedBy,
+      });
+    }
+
+    return { sudokus: gQLSudokus, cursor: newCursor, hasNextPage };
+  }
+
+  async sudokuFeedByAuthor({
+    author,
+    sudokuCursor,
+    sudokusLimit,
+  }: {
+    author: string;
+    sudokuCursor: string | null;
+    sudokusLimit: number;
+  }): Promise<SudokuFeed> {
+    let hasNextPage = false;
+    let cursorQuery: any = { author };
+    if (sudokuCursor) {
+      cursorQuery = { $and: [{ $lt: sudokuCursor }, { author }] };
+    }
+
+    let dBSudokus = await this.sudokuModel
+      .find(cursorQuery)
+      .sort({ _id: -1 })
+      .limit(sudokusLimit + 1);
+
+    if (dBSudokus.length > sudokusLimit) {
+      hasNextPage = true;
+      dBSudokus = dBSudokus.slice(0, -1);
+    }
+
+    //the cursor is the mongo identifier of the last element in the array
+    const newCursor = dBSudokus[dBSudokus.length - 1].id;
+    const gQLSudokus: GQLSudoku[] = [];
+    for (const sudoku of dBSudokus) {
+      // const author = await this.usersRepository.findOneById(sudoku.author);
+      // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+      //   ids: sudoku.favoritedBy.map((id) => id.toString()),
+      //   cursor: null,
+      //   limit: favoritedByLimit,
+      // });
+      gQLSudokus.push({
+        author: sudoku.author,
+        id: sudoku.id,
+        createdAt: sudoku.createdAt,
+        updatedAt: sudoku.updatedAt,
+        content: sudoku.content,
+        favoriteCount: sudoku.favoriteCount,
+        favoritedBy: sudoku.favoritedBy,
       });
     }
 
@@ -133,28 +190,26 @@ export class SudokusRepository {
 
   async findOne({
     sudokuId,
-    favoritedByCursor,
-    favoritedByLimit,
   }: {
     sudokuId: string;
-    favoritedByCursor: string | null;
-    favoritedByLimit: number;
+    // favoritedByCursor: string | null;
+    // favoritedByLimit: number;
   }): Promise<GQLSudoku> {
     const dBSudoku = await this.sudokuModel.findById(sudokuId);
-    const author = await this.usersRepository.findOneById(dBSudoku.author);
-    const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-      ids: dBSudoku.favoritedBy.map((id) => id.toString()),
-      cursor: favoritedByCursor,
-      limit: favoritedByLimit,
-    });
+    // const author = await this.usersRepository.findOneById(dBSudoku.author);
+    // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+    //   ids: dBSudoku.favoritedBy.map((id) => id.toString()),
+    //   cursor: favoritedByCursor,
+    //   limit: favoritedByLimit,
+    // });
     const gQLsudoku: GQLSudoku = {
-      author,
+      author: dBSudoku.author,
       id: dBSudoku.id,
       createdAt: dBSudoku.createdAt,
       updatedAt: dBSudoku.updatedAt,
       content: dBSudoku.content,
       favoriteCount: dBSudoku.favoriteCount,
-      favoritedBy: favoritedBy,
+      favoritedBy: dBSudoku.favoritedBy,
     };
     return gQLsudoku;
   }
@@ -162,13 +217,11 @@ export class SudokusRepository {
   async toggleLike({
     sudokuId,
     userId,
-    favoritedByCursor,
-    favoritedByLimit,
   }: {
     sudokuId: string;
     userId: string;
-    favoritedByCursor: string | null;
-    favoritedByLimit: number;
+    // favoritedByCursor: string | null;
+    // favoritedByLimit: number;
   }): Promise<GQLSudoku> {
     const sudoku = await this.sudokuModel.findById(sudokuId);
     const hasUser = sudoku.favoritedBy
@@ -183,19 +236,19 @@ export class SudokusRepository {
         },
         { new: true },
       );
-      const author = await this.usersRepository.findOneById(userId);
-      const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-        ids: dBSudoku.favoritedBy.map((id) => id.toString()),
-        cursor: favoritedByCursor,
-        limit: favoritedByLimit,
-      });
+      // const author = await this.usersRepository.findOneById(userId);
+      // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+      //   ids: dBSudoku.favoritedBy.map((id) => id.toString()),
+      //   cursor: favoritedByCursor,
+      //   limit: favoritedByLimit,
+      // });
       const gQLSudoku: GQLSudoku = {
         id: sudokuId,
-        author,
+        author: dBSudoku.author,
         content: dBSudoku.content,
         createdAt: dBSudoku.createdAt,
         favoriteCount: dBSudoku.favoriteCount,
-        favoritedBy: favoritedBy,
+        favoritedBy: dBSudoku.favoritedBy,
         updatedAt: dBSudoku.updatedAt,
       };
       return gQLSudoku;
@@ -208,19 +261,19 @@ export class SudokusRepository {
         },
         { new: true },
       );
-      const author = await this.usersRepository.findOneById(userId);
-      const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-        ids: dBSudoku.favoritedBy.map((id) => id.toString()),
-        cursor: favoritedByCursor,
-        limit: favoritedByLimit,
-      });
+      // const author = await this.usersRepository.findOneById(userId);
+      // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+      //   ids: dBSudoku.favoritedBy.map((id) => id.toString()),
+      //   cursor: favoritedByCursor,
+      //   limit: favoritedByLimit,
+      // });
       const gQLSudoku: GQLSudoku = {
         id: sudokuId,
-        author,
+        author: dBSudoku.author,
         content: dBSudoku.content,
         createdAt: dBSudoku.createdAt,
         favoriteCount: dBSudoku.favoriteCount,
-        favoritedBy: favoritedBy,
+        favoritedBy: dBSudoku.favoritedBy,
         updatedAt: dBSudoku.updatedAt,
       };
       return gQLSudoku;
@@ -230,30 +283,28 @@ export class SudokusRepository {
   async updateContent({
     sudokuId,
     sudokuContent,
-    favoritedByCursor,
-    favoritedByLimit,
   }: {
     sudokuId: string | Types.ObjectId;
     sudokuContent: string;
-    favoritedByCursor: string | null;
-    favoritedByLimit: number;
+    // favoritedByCursor: string | null;
+    // favoritedByLimit: number;
   }): Promise<GQLSudoku> {
     const sudoku = await this.sudokuModel.findById(sudokuId);
     sudoku.content = sudokuContent;
     const dBSudoku = await sudoku.save();
-    const author = await this.usersRepository.findOneById(sudoku.author);
-    const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-      ids: dBSudoku.favoritedBy.map((id) => id.toString()),
-      cursor: favoritedByCursor,
-      limit: favoritedByLimit,
-    });
+    // const author = await this.usersRepository.findOneById(sudoku.author);
+    // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+    //   ids: dBSudoku.favoritedBy.map((id) => id.toString()),
+    //   cursor: favoritedByCursor,
+    //   limit: favoritedByLimit,
+    // });
     const gQLSudoku: GQLSudoku = {
       id: dBSudoku.id,
-      author,
+      author: dBSudoku.author,
       content: dBSudoku.content,
       createdAt: dBSudoku.createdAt,
       favoriteCount: dBSudoku.favoriteCount,
-      favoritedBy: favoritedBy,
+      favoritedBy: dBSudoku.favoritedBy,
       updatedAt: dBSudoku.updatedAt,
     };
     return gQLSudoku;
@@ -267,19 +318,23 @@ export class SudokusRepository {
     sudokuId: string;
     favoritedByCursor: string | null;
     favoritedByLimit: number;
-  }): Promise<User[]> {
+  }): Promise<UserFeed> {
     const sudoku = await this.sudokuModel.findById(sudokuId);
-    return this.usersRepository.findUsersByTheirIds({
+    return this.usersRepository.userFeedByTheirIds({
       ids: sudoku.favoritedBy.map((id) => id.toString()),
       cursor: favoritedByCursor,
       limit: favoritedByLimit,
     });
   }
 
-  async findSudokouAuthor(sudokuId: string): Promise<User> {
+  async findSudokouAuthor({
+    sudokuId,
+  }: {
+    sudokuId: string;
+  }): Promise<GQLUser> {
     const sudoku = await this.sudokuModel.findById(sudokuId);
-    return this.usersRepository.findOne({
-      _id: sudoku.author,
+    return this.usersRepository.findOnePublicDetailsById({
+      userId: sudoku.author,
     });
   }
 }

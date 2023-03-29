@@ -1,12 +1,15 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
-import { join } from 'path';
-import { validate } from './env.validation';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { join } from 'path';
+
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
+
+import { validate } from './env.validation';
+
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SudokusModule } from './sudokus/sudokus.module';
@@ -36,68 +39,3 @@ import { SudokusModule } from './sudokus/sudokus.module';
   providers: [AppService],
 })
 export class AppModule {}
-
-// constructor(private configService: ConfigService<EnvironmentVariables>
-// const port = this.configService.get('PORT', { infer: true });
-// const dbUser = this.configService.get<string>('DATABASE_USER');
-
-//   scalar DateTime
-
-//   type User {
-//     id: ID!
-//     username: String!
-//     sudokus: [Sudoku!]!
-//     favorites: [Sudoku!]!
-//   }
-
-//   type Me {
-//     id: ID!
-//     username: String!
-//     email: String
-//     sudokus: [Sudoku!]!
-//     favorites: [Sudoku!]!
-//   }
-
-//   type Sudoku {
-//     id: ID!
-//     content: String!
-//     author: User!
-//     createdAt: DateTime!
-//     updatedAt: DateTime!
-//     favoriteCount: Int!
-//     favoritedBy: [User!]!
-//   }
-
-//   type SudokuFeed {
-//     sudokus: [Sudoku!]!
-//     cursor: String!
-//     hasNextPage: Boolean!
-//   }
-
-//   type Query {
-//     sudokus: [Sudoku!]!
-//     sudoku(id: ID): Sudoku!
-//     user(username: String!): User
-//     users: [User!]!
-//     me: Me!
-//     sudokuFeed(cursor: String): SudokuFeed
-//   }
-
-//   type Mutation {
-//     newSudoku(content: String!): Sudoku!
-//     deleteSudoku(id: ID!): Boolean!
-//     updateSudoku(id: ID!, content: String!): Sudoku!
-
-//     signUp(username: String!, email: String, password: String!): String
-//     signIn(username: String, email: String, password: String!): String!
-
-//     updateUserUsername(username: String!): String!
-//     updateUserEmail(email: String!): String!
-//     updateUserPassword(password: String!): Boolean!
-
-//     activateEmail(token: String!): Boolean!
-//     forgotPassword(email: String!): Boolean!
-//     resetPassword(token: String!, newPassword: String!): Boolean!
-
-//     toggleFavorite(id: ID!): Sudoku!
-//   }

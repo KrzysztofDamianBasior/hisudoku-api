@@ -1,9 +1,38 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
+
 import { UserDocument, User as DBUser } from './user.schema';
+
 import { Role } from 'src/auth/roles';
-import { User as GQLUser } from '../models/user.model';
+
+// import { User as GQLUser } from '../models/user.model';
+// import { UserFeed } from '../models/userFeed.model';
+
+export type PublicUserDetails = {
+  id: string;
+  username: string;
+  roles: string[];
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export type ProtectedUserDetails = {
+  email: string;
+};
+
+export type OpenUserDetails = PublicUserDetails & ProtectedUserDetails;
+
+export type PrivateUserDetails = {
+  password: string;
+  resetPasswordLink: string;
+};
+
+export type UserFeed = {
+  users: PublicUserDetails[];
+  hasNextPage: boolean;
+  cursor: string;
+};
 
 @Injectable()
 export class UsersRepository {
@@ -11,10 +40,28 @@ export class UsersRepository {
     @InjectModel(DBUser.name) private userModel: Model<UserDocument>,
   ) {}
 
-  async createOne(user: DBUser): Promise<GQLUser> {
+  async createOne({
+    username,
+    hashedPassword,
+    roles,
+    email,
+  }: {
+    username: string;
+    hashedPassword: string;
+    roles: string[];
+    email?: string;
+  }): Promise<OpenUserDetails> {
+    const user: DBUser = {
+      username,
+      roles,
+      email: email,
+      password: hashedPassword,
+      resetPasswordLink: '',
+    };
     const newUser = new this.userModel(user);
+
     await newUser.save();
-    const userData: GQLUser = {
+    const userData: OpenUserDetails = {
       id: newUser._id.toString(),
       username: newUser.username,
       email: newUser.email,
@@ -25,13 +72,21 @@ export class UsersRepository {
     return userData;
   }
 
-  async isUsernameExist(username: string) {
+  async doesUsernameExist({ username }: { username: string }) {
     return this.userModel.exists({ username });
   }
 
-  async removeById(userId: string | Types.ObjectId): Promise<GQLUser> {
+  async doesEmailExist({ email }: { email: string }) {
+    return this.userModel.exists({ email });
+  }
+
+  async removeOneById({
+    userId,
+  }: {
+    userId: string | Types.ObjectId;
+  }): Promise<OpenUserDetails> {
     const user = await this.userModel.findOneAndDelete({ _id: userId });
-    const userData: GQLUser = {
+    const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
       email: user.email,
@@ -42,42 +97,55 @@ export class UsersRepository {
     return userData;
   }
 
-  async findPasswordByUsername(
-    username: string,
-  ): Promise<{ password: string }> {
-    const user = await this.userModel.findOne({ username }).select('password');
-    const privateData: { password: string } = { password: user.password };
+  async findOnePrivateDetailsByUsername({
+    username,
+  }: {
+    username: string;
+  }): Promise<PrivateUserDetails> {
+    const user = await this.userModel.findOne({ username });
+    if (!user) {
+      throw new NotFoundException();
+    }
+    const privateData: PrivateUserDetails = {
+      password: user.password,
+      resetPasswordLink: user.resetPasswordLink,
+    };
     return privateData;
   }
 
-  async findPasswordById(id: string): Promise<{ password: string }> {
-    const user = await this.userModel.findById(id).select('password');
-    const privateData: { password: string } = { password: user.password };
+  async findOnePrivateDetailsById({
+    userId,
+  }: {
+    userId: string;
+  }): Promise<PrivateUserDetails> {
+    const user = await this.userModel.findById(userId);
+    const privateData: PrivateUserDetails = {
+      password: user.password,
+      resetPasswordLink: user.resetPasswordLink,
+    };
     return privateData;
   }
 
   async findMany({
+    usersFilterQuery = {},
     offset,
     perPage,
-    usersFilterQuery = {},
   }: {
     usersFilterQuery: FilterQuery<DBUser>;
     offset: number;
     perPage: number;
-  }): Promise<GQLUser[]> {
+  }): Promise<PublicUserDetails[]> {
     const usersCollection = await this.userModel
       .find(usersFilterQuery)
-      .select('_id username email roles createdAt updatedAt')
       .skip(offset)
       .limit(perPage)
       .sort({ createdAt: 'desc' });
 
-    const filteredCollection: GQLUser[] = [];
+    const filteredCollection: PublicUserDetails[] = [];
     for (const user of usersCollection) {
       filteredCollection.push({
         id: user._id.toString(),
         username: user.username,
-        email: user.email,
         roles: user.roles,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
@@ -86,45 +154,13 @@ export class UsersRepository {
     return filteredCollection;
   }
 
-  async findOne(userFilterQuery: FilterQuery<DBUser>): Promise<GQLUser> {
-    const user = await this.userModel
-      .findOne(userFilterQuery)
-      .select('_id username email roles createdAt updatedAt');
-    const userData: GQLUser = {
-      id: user._id.toString(),
-      username: user.username,
-      email: user.email,
-      roles: user.roles,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-    return userData;
-  }
-
-  async findOneById(id: string | Types.ObjectId): Promise<GQLUser> {
-    const user = await this.userModel
-      .findById(id)
-      .select('_id username email roles createdAt updatedAt');
-    const userData: GQLUser = {
-      id: user._id.toString(),
-      username: user.username,
-      email: user.email,
-      roles: user.roles,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-    return userData;
-  }
-
-  async findUsersByTheirIds({
-    ids,
+  async userFeed({
     cursor,
     limit,
   }: {
-    ids: string[];
     cursor: string | null;
     limit: number;
-  }): Promise<GQLUser[]> {
+  }): Promise<UserFeed> {
     let hasNextPage = false;
 
     //if no cursor has been passed, the default query will be empty, it will retrieve the latest notes from the database
@@ -148,54 +184,62 @@ export class UsersRepository {
     //the cursor is the mongo identifier of the last element in the array
     const newCursor = usersCollection[usersCollection.length - 1].id;
 
-    // offset based pagination
-    // const usersCollection = await this.userModel
-    //   .find({ _id: { $in: ids } })
-    //   .select('_id username email roles createdAt updatedAt')
-    //   .skip(offset)
-    //   .limit(perPage)
-    //   .sort({ createdAt: 'desc' });
-
-    const filteredCollection: GQLUser[] = [];
+    // const filteredCollection: string[] = [];
+    // for (const user of usersCollection) {
+    //   filteredCollection.push(user._id.toString());
+    // }
+    const filteredCollection: PublicUserDetails[] = [];
     for (const user of usersCollection) {
       filteredCollection.push({
         id: user._id.toString(),
         username: user.username,
-        email: user.email,
         roles: user.roles,
         createdAt: user.createdAt,
         updatedAt: user.updatedAt,
       });
     }
-    return filteredCollection;
+    return { cursor: newCursor, hasNextPage, users: filteredCollection };
   }
 
-  async findUserById(id: string | Types.ObjectId): Promise<GQLUser> {
-    const user = await this.userModel
-      .findById(id)
-      .select('_id username email roles createdAt updatedAt');
-    const userData: GQLUser = {
-      id: user._id.toString(),
-      username: user.username,
-      email: user.email,
-      roles: user.roles,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-    return userData;
-  }
-
-  async updateResetLink({
-    id,
-    resetLink,
+  async findOnePublicDetails({
+    userFilterQuery,
   }: {
-    id: string | Types.ObjectId;
-    resetLink: string;
-  }): Promise<GQLUser> {
-    const user = await this.userModel.findById(id);
-    user.resetLink = resetLink;
-    await user.save();
-    const userData: GQLUser = {
+    userFilterQuery: FilterQuery<PublicUserDetails>;
+  }): Promise<PublicUserDetails> {
+    const user = await this.userModel.findOne(userFilterQuery);
+    const userData: PublicUserDetails = {
+      id: user._id.toString(),
+      username: user.username,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
+  }
+
+  async findOnePublicDetailsById({
+    userId,
+  }: {
+    userId: string | Types.ObjectId;
+  }): Promise<PublicUserDetails> {
+    const user = await this.userModel.findById(userId);
+    const userData: PublicUserDetails = {
+      id: user._id.toString(),
+      username: user.username,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
+  }
+
+  async findOneOpenDetailsById({
+    userId,
+  }: {
+    userId: string | Types.ObjectId;
+  }): Promise<OpenUserDetails> {
+    const user = await this.userModel.findById(userId);
+    const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
       email: user.email,
@@ -206,18 +250,13 @@ export class UsersRepository {
     return userData;
   }
 
-  async updateEmailAndRemoveResetLink({
-    resetLink,
+  async findOneOpenDetailsByEmail({
     email,
   }: {
-    resetLink: string;
-    email: string;
-  }): Promise<GQLUser> {
-    const user = await this.userModel.findOne({ resetLink });
-    user.email = email;
-    user.resetLink = '';
-    await user.save();
-    const userData: GQLUser = {
+    email: string | Types.ObjectId;
+  }): Promise<OpenUserDetails> {
+    const user = await this.userModel.findOne({ email });
+    const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
       email: user.email,
@@ -228,39 +267,138 @@ export class UsersRepository {
     return userData;
   }
 
-  async updatePasswordAndRemoveResetLink({
-    resetLink,
-    password,
-  }: {
-    resetLink: string;
-    password: string;
-  }): Promise<GQLUser> {
-    const user = await this.userModel.findOne({ resetLink });
-    user.password = password;
-    user.resetLink = '';
-    await user.save();
-    const userData: GQLUser = {
-      id: user._id.toString(),
-      username: user.username,
-      email: user.email,
-      roles: user.roles,
-      createdAt: user.createdAt,
-      updatedAt: user.updatedAt,
-    };
-    return userData;
-  }
-
-  async updateUsername({
-    id,
+  async findOnePublicDetailsByUsername({
     username,
   }: {
-    id: string | Types.ObjectId;
-    username: string;
-  }): Promise<GQLUser> {
-    const user = await this.userModel.findById(id);
-    user.username = username;
+    username: string | Types.ObjectId;
+  }): Promise<PublicUserDetails> {
+    const user = await this.userModel.findOne({ username });
+    const userData: PublicUserDetails = {
+      id: user._id.toString(),
+      username: user.username,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
+  }
+
+  async findOnePublicDetailsByResetPasswordLink({
+    resetPasswordLink,
+  }: {
+    resetPasswordLink: string | Types.ObjectId;
+  }): Promise<PublicUserDetails> {
+    const user = await this.userModel.findOne({ resetPasswordLink });
+    const userData: PublicUserDetails = {
+      id: user._id.toString(),
+      username: user.username,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
+  }
+
+  // async findManyByTheirIds({ ids }: { ids: string[] }): Promise<GQLUser[]> {
+  //   const cursorQuery: any = { _id: { $in: ids } };
+
+  //   const usersCollection = await this.userModel
+  //     .find(cursorQuery)
+  //     .sort({ _id: -1 });
+
+  //   const filteredCollection: GQLUser[] = [];
+  //   for (const user of usersCollection) {
+  //     filteredCollection.push({
+  //       id: user._id.toString(),
+  //       username: user.username,
+  //       roles: user.roles,
+  //       createdAt: user.createdAt,
+  //       updatedAt: user.updatedAt,
+  //     });
+  //   }
+  //   return filteredCollection;
+  // }
+
+  async userFeedByTheirIds({
+    ids,
+    cursor,
+    limit,
+  }: {
+    ids: string[];
+    cursor: string | null;
+    limit: number;
+  }): Promise<UserFeed> {
+    let hasNextPage = false;
+
+    let cursorQuery: any = { _id: { $in: ids } };
+
+    //if a cursor has been passed, the query will look for notes whose ObjectId value is less than the cursor value
+    if (cursor) {
+      cursorQuery = { $and: [{ $lt: cursor }, { _id: { $in: ids } }] };
+    }
+
+    let usersCollection = await this.userModel
+      .find(cursorQuery)
+      .sort({ _id: -1 })
+      .limit(limit + 1);
+
+    if (usersCollection.length > limit) {
+      hasNextPage = true;
+      usersCollection = usersCollection.slice(0, -1);
+    }
+
+    //the cursor is the mongo identifier of the last element in the array
+    const newCursor = usersCollection[usersCollection.length - 1].id;
+
+    // const filteredCollection: string[] = [];
+    // for (const user of usersCollection) {
+    //   filteredCollection.push(user._id.toString());
+    // }
+    const filteredCollection: PublicUserDetails[] = [];
+    for (const user of usersCollection) {
+      filteredCollection.push({
+        id: user._id.toString(),
+        username: user.username,
+        roles: user.roles,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt,
+      });
+    }
+    return { cursor: newCursor, hasNextPage, users: filteredCollection };
+  }
+
+  async updateResetPasswordLink({
+    userId,
+    newResetPasswordLink,
+  }: {
+    userId: string | Types.ObjectId;
+    newResetPasswordLink: string;
+  }): Promise<PublicUserDetails> {
+    const user = await this.userModel.findById(userId);
+    user.resetPasswordLink = newResetPasswordLink;
     await user.save();
-    const userData: GQLUser = {
+    const userData: PublicUserDetails = {
+      id: user._id.toString(),
+      username: user.username,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
+  }
+
+  async updateOnePasswordAndRemoveResetPasswordLink({
+    resetPasswordLink,
+    newPassword,
+  }: {
+    resetPasswordLink: string;
+    newPassword: string;
+  }): Promise<OpenUserDetails> {
+    const user = await this.userModel.findOne({ resetPasswordLink });
+    user.password = newPassword;
+    user.resetPasswordLink = '';
+    await user.save();
+    const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
       email: user.email,
@@ -271,17 +409,17 @@ export class UsersRepository {
     return userData;
   }
 
-  async updatePassword({
-    id,
-    password,
+  async updateOneUsername({
+    userId,
+    newUsername,
   }: {
-    id: string | Types.ObjectId;
-    password: string;
-  }): Promise<GQLUser> {
-    const user = await this.userModel.findById(id);
-    user.password = password;
+    userId: string | Types.ObjectId;
+    newUsername: string;
+  }): Promise<OpenUserDetails> {
+    const user = await this.userModel.findById(userId);
+    user.username = newUsername;
     await user.save();
-    const userData: GQLUser = {
+    const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
       email: user.email,
@@ -292,20 +430,61 @@ export class UsersRepository {
     return userData;
   }
 
-  async updateRoles({
-    id,
-    roles,
+  async updateOneEmail({
+    userId,
+    newUsername,
   }: {
-    id: string | Types.ObjectId;
-    roles: Role[];
-  }): Promise<GQLUser> {
-    const user = await this.userModel.findById(id);
-    user.roles = roles;
+    userId: string | Types.ObjectId;
+    newUsername: string;
+  }): Promise<OpenUserDetails> {
+    const user = await this.userModel.findById(userId);
+    user.username = newUsername;
     await user.save();
-    const userData: GQLUser = {
+    const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
       email: user.email,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
+  }
+
+  async updateOnePassword({
+    userId,
+    newPassword,
+  }: {
+    userId: string | Types.ObjectId;
+    newPassword: string;
+  }): Promise<OpenUserDetails> {
+    const user = await this.userModel.findById(userId);
+    user.password = newPassword;
+    await user.save();
+    const userData: OpenUserDetails = {
+      id: user._id.toString(),
+      username: user.username,
+      email: user.email,
+      roles: user.roles,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+    return userData;
+  }
+
+  async updateOneRoles({
+    userId,
+    newRoles,
+  }: {
+    userId: string | Types.ObjectId;
+    newRoles: Role[];
+  }): Promise<PublicUserDetails> {
+    const user = await this.userModel.findById(userId);
+    user.roles = newRoles;
+    await user.save();
+    const userData: PublicUserDetails = {
+      id: user._id.toString(),
+      username: user.username,
       roles: user.roles,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
@@ -319,7 +498,7 @@ export class UsersRepository {
   }: {
     userFilterQuery: FilterQuery<UserDocument>;
     user: Partial<UserDocument>;
-  }): Promise<GQLUser> {
+  }): Promise<OpenUserDetails> {
     const newUser = await this.userModel.findOneAndUpdate(
       userFilterQuery,
       user,
@@ -327,7 +506,7 @@ export class UsersRepository {
         new: true,
       },
     );
-    const userData: GQLUser = {
+    const userData: OpenUserDetails = {
       id: newUser._id.toString(),
       username: newUser.username,
       email: newUser.email,

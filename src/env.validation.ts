@@ -8,7 +8,7 @@ enum Environment {
   Provision = 'provision',
 }
 
-class EnvironmentVariables {
+export class EnvironmentVariables {
   @IsEnum(Environment)
   NODE_ENV: Environment;
 
@@ -19,7 +19,7 @@ class EnvironmentVariables {
   SALT_LENGTH: number;
 
   @IsString()
-  JWT_SECRET: number;
+  JWT_SECRET: string;
 
   @IsString()
   MONGODB_URI: string;

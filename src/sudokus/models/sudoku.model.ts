@@ -7,6 +7,8 @@ import {
 } from '@nestjs/graphql';
 import { IsDate, IsNumber, IsString } from 'class-validator';
 import { User } from 'src/users/models/user.model';
+import { Types } from 'mongoose';
+import { UserFeed } from 'src/users/models/userFeed.model';
 
 @ObjectType()
 export class Sudoku {
@@ -23,7 +25,7 @@ export class Sudoku {
   updatedAt: Date;
 
   @Field(() => User, { description: '' })
-  author: User;
+  author: Types.ObjectId | string;
 
   @IsString()
   @Field(() => String, { description: '' })
@@ -33,6 +35,6 @@ export class Sudoku {
   @Field(() => Int, { description: '' })
   favoriteCount: number;
 
-  @Field(() => [User])
-  favoritedBy: User[];
+  @Field(() => UserFeed)
+  favoritedBy: (Types.ObjectId | string)[];
 }

@@ -4,27 +4,45 @@ import {
   Inject,
   forwardRef,
 } from '@nestjs/common';
-import { CreateSudokuInput } from '../dto/input/create-sudoku.input';
-import { UpdateSudokuInput } from '../dto/input/update-sudoku.input';
 import { UsersService } from 'src/users/services/users.service';
-import { AuthService } from 'src/auth/services/auth.service';
+
 import { SudokusRepository } from '../db/sudokus.repository';
-import { Sudoku } from '../models/sudoku.model';
-import { FindManySudokusArgs } from '../dto/args/find-many-sudokus.args';
-import { SudokuFeed } from '../models/sudokuFeed.model';
+
+import { SudokuFeedArgs } from '../dto/args/sudoku-feed.args';
 import { FindOneSudokuArgs } from '../dto/args/find-one-sudoku.args';
 import { RemoveSudokuInput } from '../dto/input/remove-sudoku.input';
+import { UpdateSudokuInput } from '../dto/input/update-sudoku.input';
+import { CreateSudokuInput } from '../dto/input/create-sudoku.input';
 import { ToggleFavoriteSudokuInput } from '../dto/input/toggle-favorite-sudoku.input';
-import { User } from 'src/users/models/user.model';
 
+import { User } from 'src/users/models/user.model';
+import { UserFeed } from 'src/users/models/userFeed.model';
+
+import { Sudoku } from '../models/sudoku.model';
+import { SudokuFeed } from '../models/sudokuFeed.model';
 @Injectable()
 export class SudokusService {
   constructor(
     private readonly sudokusRepository: SudokusRepository,
     @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
-    private readonly authService: AuthService,
   ) {}
+
+  async findManySudokusByAuthor({
+    author,
+    sudokuCursor,
+    sudokusLimit,
+  }: {
+    author: string;
+    sudokuCursor: string;
+    sudokusLimit: number;
+  }): Promise<SudokuFeed> {
+    return this.sudokusRepository.sudokuFeedByAuthor({
+      author,
+      sudokuCursor,
+      sudokusLimit,
+    });
+  }
 
   async createSudoku({
     authorId,
@@ -39,10 +57,8 @@ export class SudokusService {
     });
   }
 
-  async findManySudokus(
-    findManySudokusArgs: FindManySudokusArgs,
-  ): Promise<SudokuFeed> {
-    return this.sudokusRepository.findMany({ ...findManySudokusArgs });
+  async sudokuFeed(sudokuFeedArgs: SudokuFeedArgs): Promise<SudokuFeed> {
+    return this.sudokusRepository.sudokuFeed({ ...sudokuFeedArgs });
   }
 
   async findOneSudoku(findOneSudokuArgs: FindOneSudokuArgs): Promise<Sudoku> {
@@ -56,7 +72,10 @@ export class SudokusService {
     userId: string;
     updateSudokuInput: UpdateSudokuInput;
   }): Promise<Sudoku> {
-    this.verifyNoteAuthor({ userId, sudokuId: updateSudokuInput.sudokuId });
+    await this.verifySudokuAuthor({
+      userId,
+      sudokuId: updateSudokuInput.sudokuId,
+    });
     return this.sudokusRepository.updateContent({ ...updateSudokuInput });
   }
 
@@ -67,8 +86,13 @@ export class SudokusService {
     userId: string;
     removeSudokuInput: RemoveSudokuInput;
   }): Promise<Sudoku> {
-    this.verifyNoteAuthor({ userId, sudokuId: removeSudokuInput.sudokuId });
-    return this.sudokusRepository.remove(removeSudokuInput.sudokuId);
+    await this.verifySudokuAuthor({
+      userId,
+      sudokuId: removeSudokuInput.sudokuId,
+    });
+    return this.sudokusRepository.remove({
+      sudokuId: removeSudokuInput.sudokuId,
+    });
   }
 
   async toggleFavorite({
@@ -84,26 +108,34 @@ export class SudokusService {
     });
   }
 
-  async verifyNoteAuthor({
+  async verifySudokuAuthor({
     userId,
     sudokuId,
   }: {
     userId: string;
     sudokuId: string;
   }): Promise<boolean> {
-    const sudokuAuthor = await this.sudokusRepository.findSudokouAuthor(
+    const sudokuAuthor = await this.sudokusRepository.findSudokouAuthor({
       sudokuId,
-    );
+    });
     if (sudokuAuthor.id !== userId) {
       throw new ForbiddenException(
         'not enough privileges to perform an action on a resource',
       );
+      // throw new GraphQLError(
+      //   customMessage,
+      //    {
+      //     extensions: {
+      //     code: customCode,
+      //    },
+      //   },
+      //  );
     }
     return true;
   }
 
-  async findSudokuAuthor(sudokuId: string): Promise<User> {
-    return this.sudokusRepository.findSudokouAuthor(sudokuId);
+  async findSudokuAuthor({ sudokuId }: { sudokuId: string }): Promise<User> {
+    return this.sudokusRepository.findSudokouAuthor({ sudokuId });
   }
 
   async findUsersWhoLikeSudoku({
@@ -114,7 +146,7 @@ export class SudokusService {
     sudokuId: string;
     favoritedByCursor: string;
     favoritedByLimit: number;
-  }): Promise<User[]> {
+  }): Promise<UserFeed> {
     return this.sudokusRepository.findUsersWhoLikeSudoku({
       sudokuId,
       favoritedByCursor,

@@ -1,14 +1,15 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsString, Length, IsEmail } from 'class-validator';
+import { IsString, Length } from 'class-validator';
+import { minPasswordLength, maxPasswordLength } from 'src/constants';
 
-@InputType()
+@InputType({ description: '' })
 export class ResetPasswordInput {
+  @Field(() => String, { description: '' })
   @IsString()
-  @Field(() => String, { description: 'Example field (placeholder)' })
   token: string;
 
+  @Field(() => String, { description: '' })
   @IsString()
-  @Length(5, 50)
-  @Field(() => String, { description: 'Example field (placeholder)' })
+  @Length(minPasswordLength, maxPasswordLength)
   password: string;
 }

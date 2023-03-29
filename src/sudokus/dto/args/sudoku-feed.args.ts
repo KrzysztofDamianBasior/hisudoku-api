@@ -2,16 +2,12 @@ import { ArgsType, Field, Int, ID } from '@nestjs/graphql';
 import { IsNumber, IsString } from 'class-validator';
 
 @ArgsType()
-export class FindManySudokusArgs {
+export class SudokuFeedArgs {
+  @Field(() => ID, { nullable: true, description: '' })
   @IsString()
-  @Field(() => ID)
   sudokuCursor: string;
 
+  @Field(() => Int, { description: '' })
   @IsNumber()
-  @Field(() => Int)
   sudokusLimit: number;
-
-  @IsNumber()
-  @Field(() => Int)
-  favoritedByLimit: number;
 }

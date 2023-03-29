@@ -33,7 +33,7 @@ export class Sudoku {
       },
     ],
   })
-  favoritedBy: Types.ObjectId[];
+  favoritedBy: (Types.ObjectId | string)[];
 }
 
 export const SudokuSchema = SchemaFactory.createForClass(Sudoku);

@@ -6,6 +6,7 @@ import { SudokusRepository } from './db/sudokus.repository';
 import { MongooseModule } from '@nestjs/mongoose';
 import { AuthModule } from 'src/auth/auth.module';
 import { Sudoku, SudokuSchema } from './db/sudoku.schema';
+import { UsersModule } from 'src/users/users.module';
 
 @Module({
   providers: [
@@ -16,8 +17,9 @@ import { Sudoku, SudokuSchema } from './db/sudoku.schema';
   ],
   imports: [
     MongooseModule.forFeature([{ name: Sudoku.name, schema: SudokuSchema }]),
-    forwardRef(() => AuthModule),
+    AuthModule,
+    forwardRef(() => UsersModule),
   ],
-  exports: [SudokusService, SudokusRepository, ValidationService],
+  exports: [SudokusService, SudokusRepository],
 })
 export class SudokusModule {}

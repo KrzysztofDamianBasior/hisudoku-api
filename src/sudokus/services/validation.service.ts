@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+export type ValidSudokuValue = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 @Injectable()
 export class ValidationService {
   extractColumnFromTheBoard({
@@ -12,13 +13,13 @@ export class ValidationService {
     return board.reduce((total, row) => [...total, row[columnNum]], []);
   }
 
-  isFragmentSolved(array: number[]) {
+  isFragmentSolved({ array }: { array: ValidSudokuValue[] }) {
     const fragment = array.slice(0).sort().join(''),
       passingFragment = [1, 2, 3, 4, 5, 6, 7, 8, 9].join('');
     return fragment === passingFragment;
   }
 
-  isBoardValid(board: number[][]) {
+  isBoardValid({ board }: { board: number[][] }) {
     const rows = [[], [], [], [], [], [], [], [], []];
     const columns = [[], [], [], [], [], [], [], [], []];
     const boxes = [[], [], [], [], [], [], [], [], []];
@@ -44,7 +45,7 @@ export class ValidationService {
     return true;
   }
 
-  stringToBoard(sudokuString: string) {
+  stringToBoard({ sudokuString }: { sudokuString: string }) {
     const rows = sudokuString.split(';');
     const board: number[][] = [];
 
@@ -59,7 +60,7 @@ export class ValidationService {
     return board;
   }
 
-  validateSudokuString(str: string) {
+  validateSudokuString({ str }: { str: string }) {
     return /^([0-9]{3}\.[0-9]{3}\.[0-9]{3};){9}$/.test(str);
   }
 
@@ -74,7 +75,7 @@ export class ValidationService {
     return digits.length === [...new Set(digits)].length;
   }
 
-  isSudokuStringValidBoard(sudokuString: string) {
+  isSudokuStringValidBoard({ sudokuString }: { sudokuString: string }) {
     /*
         Check each row for duplicates.
         Check each column for duplicates.
@@ -82,7 +83,7 @@ export class ValidationService {
         Return false if any duplicates are found, and true if no duplicates are found.
     */
     //reorganize data
-    const board = this.stringToBoard(sudokuString);
-    return this.isBoardValid(board);
+    const board = this.stringToBoard({ sudokuString });
+    return this.isBoardValid({ board });
   }
 }

@@ -1,23 +1,30 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsString, Length, IsEmail } from 'class-validator';
+import { IsString, Length, IsEmail, IsOptional } from 'class-validator';
+import {
+  minUsernameLength,
+  maxUsernameLength,
+  minPasswordLength,
+  maxPasswordLength,
+} from 'src/constants';
 
-@InputType()
+@InputType({ description: '' })
 export class SignUpInput {
+  @Field(() => String, { description: '' })
   @IsString()
-  @Length(5, 50)
-  @Field(() => String, { description: 'Example field (placeholder)' })
+  @Length(minUsernameLength, maxUsernameLength)
   username: string;
 
-  @IsEmail()
-  @IsString()
   @Field(() => String, {
-    description: 'Example field (placeholder)',
+    description: '',
     nullable: true,
   })
+  @IsEmail()
+  @IsString()
+  @IsOptional()
   email: string;
 
+  @Field(() => String, { description: '' })
   @IsString()
-  @Length(5, 50)
-  @Field(() => String, { description: 'Example field (placeholder)' })
+  @Length(minPasswordLength, maxPasswordLength)
   password: string;
 }

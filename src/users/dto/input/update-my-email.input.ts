@@ -1,10 +1,9 @@
 import { InputType, Field } from '@nestjs/graphql';
-import { IsString, IsEmail } from 'class-validator';
+import { IsNotEmpty } from 'class-validator';
 
 @InputType({ description: '' })
-export class ForgotPasswordInput {
+export class UpdateMyEmailInput {
   @Field(() => String, { description: '' })
-  @IsEmail()
-  @IsString()
+  @IsNotEmpty()
   email: string;
 }

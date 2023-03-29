@@ -2,14 +2,22 @@ import {
   BadRequestException,
   Inject,
   Injectable,
+  UnauthorizedException,
   forwardRef,
 } from '@nestjs/common';
-import { UsersService } from 'src/users/services/users.service';
-import * as bcrypt from 'bcrypt';
-import { SendgridService } from './sendgrid.service';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
+
+import {
+  MyAccountWithoutNestedFields,
+  UsersService,
+} from 'src/users/services/users.service';
+import { SendgridService } from './sendgrid.service';
+
 import { jwtPayload } from '../jwtPayload';
-import { Role } from '../roles';
+import { MyAccount } from 'src/users/models/myAccount.model';
+
+import { User as GQLUser } from 'src/users/models/user.model';
 
 @Injectable()
 export class AuthService {
@@ -20,15 +28,37 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateUser(username: string, password: string): Promise<any> {
-    const userPassword = await this.usersService.findPasswordByUsername(
+  async validateUser({
+    username,
+    password,
+  }: {
+    username: string;
+    password: string;
+  }): Promise<GQLUser> {
+    const userPrivateDetails = await this.usersService.findPasswordByUsername({
       username,
-    );
+    });
+    const userPassword = userPrivateDetails.password;
 
-    if (userPassword && bcrypt.compare(password, userPassword)) {
-      return this.usersService.findByUsername(username);
+    if (userPassword) {
+      const passwordComparison: boolean = await bcrypt.compare(
+        password,
+        userPassword,
+      );
+      if (passwordComparison) {
+        const user: GQLUser = await this.usersService.findOneByUsername({
+          username,
+        });
+        if (!user) {
+          throw new UnauthorizedException();
+        }
+        return user;
+      } else {
+        throw new UnauthorizedException();
+      }
+    } else {
+      throw new UnauthorizedException();
     }
-    return null;
   }
 
   async register({
@@ -40,30 +70,25 @@ export class AuthService {
     plainTextPassword: string;
     email?: string;
   }): Promise<{ access_token: string }> {
-    const user = await this.usersService.create({
-      username,
-      plainTextPassword,
-    });
-    if (email) {
-      const resetLink = await this.sendActivateLink({
-        id: user.id,
-        username: user.username,
-        email: email,
+    const user: MyAccountWithoutNestedFields =
+      await this.usersService.createOne({
+        username,
+        plainTextPassword,
+        email,
+        roles: ['User'],
       });
-      this.usersService.updateResetLink({ resetLink, id: user.id });
-    }
-
     const payload: jwtPayload = {
-      username: user.username,
+      name: user.username,
       sub: user.id,
-      roles: user.roles as unknown as Role[],
+      iss: 'HiSudoku',
+      roles: user.roles,
     };
     return {
       access_token: this.jwtService.sign(payload),
     };
   }
 
-  async sendActivateLink({
+  async sendActivateEmailLink({
     id,
     username,
     email,
@@ -71,13 +96,13 @@ export class AuthService {
     id: string;
     username: string;
     email: string;
-  }) {
+  }): Promise<string> {
     const activateEmailPayload = {
       email: email,
       sub: id,
     };
     const activateEmailToken = await this.jwtService.sign(activateEmailPayload);
-    this.sendgridService.activateLink({
+    await this.sendgridService.activateLink({
       username,
       email,
       token: activateEmailToken,
@@ -85,11 +110,13 @@ export class AuthService {
     return activateEmailToken;
   }
 
-  async verify(token: string) {
-    const decoded = this.jwtService.verify(token);
-    const user = this.usersService.findById(decoded.sub);
+  async verify({ token }: { token: string }) {
+    const decoded = await this.jwtService.verify(token);
+    const user = await this.usersService.findOneById({ userId: decoded.sub });
     if (!user) {
-      throw new Error('Unable to get the user from decoded token.');
+      throw new BadRequestException(
+        'Unable to get the user from decoded token.',
+      );
     }
     return user;
   }
@@ -113,34 +140,42 @@ export class AuthService {
     };
   }
 
-  async activateEmail(token: string) {
+  async activateEmail({
+    token,
+  }: {
+    token: string;
+  }): Promise<Omit<MyAccount, 'createdSudokus'>> {
     //jwt = id + email
     const { email, sub }: { email: string; sub: string } =
       await this.jwtService.verify(token);
     if (email && sub) {
-      return this.usersService.updateEmailAndRemoveResetLink({
-        email,
-        resetLink: token,
+      return this.usersService.updateMyEmail({
+        userId: sub,
+        newEmail: email,
       });
     } else {
       throw new BadRequestException('Bad token');
     }
   }
 
-  async forgotPassword({ email }: { email: string }) {
-    const user = await this.usersService.findByEmail(email);
+  async forgotPassword({ email }: { email: string }): Promise<string> {
+    const user = await this.usersService.findMyAccountByEmail({ email });
     const payload = {
       id: user.id,
       email: user.email,
       username: user.username,
     };
     const token = await this.jwtService.sign(payload);
-    this.usersService.updateResetLink({ id: user.id, resetLink: token });
-    return this.sendgridService.forgetPassword({
+    await this.usersService.updateResetPasswordLink({
+      userId: user.id,
+      resetPasswordLink: token,
+    });
+    await this.sendgridService.forgetPassword({
       username: payload.username,
       email: payload.email,
       token: token,
     });
+    return 'Email was sent';
   }
 
   async resetPassword({
@@ -149,14 +184,15 @@ export class AuthService {
   }: {
     token: string;
     password: string;
-  }) {
+  }): Promise<{ access_token: string }> {
     const { username, id }: { username: string; email: string; id: string } =
       await this.jwtService.verify(token);
 
-    const user = await this.usersService.updatePasswordAndRemoveResetLink({
-      password,
-      resetLink: token,
-    });
+    const user =
+      await this.usersService.updatePasswordAndRemoveResetPasswordLink({
+        password,
+        resetPasswordLink: token,
+      });
     const payload = {
       username,
       sub: id,

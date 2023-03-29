@@ -1,0 +1,236 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type User {
+  """User identifier"""
+  id: ID!
+
+  """"""
+  createdAt: DateTime!
+
+  """"""
+  updatedAt: DateTime!
+
+  """"""
+  username: String!
+
+  """"""
+  roles: [String!]!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type UserFeed {
+  """"""
+  users: [User!]!
+
+  """"""
+  hasNextPage: Boolean!
+
+  """"""
+  cursor: ID!
+}
+
+type Sudoku {
+  """Sudoku identifier"""
+  id: ID!
+
+  """"""
+  createdAt: DateTime!
+
+  """"""
+  updatedAt: DateTime!
+
+  """"""
+  author: User!
+
+  """"""
+  content: String!
+
+  """"""
+  favoriteCount: Int!
+  favoritedBy(userCursor: ID, usersLimit: Int!): UserFeed!
+}
+
+type SudokuFeed {
+  """"""
+  sudokus: [Sudoku!]!
+
+  """"""
+  hasNextPage: Boolean!
+
+  """"""
+  cursor: String!
+}
+
+type MyAccount {
+  """User identifier"""
+  id: ID!
+
+  """"""
+  createdSudokus(sudokuCursor: ID, sudokusLimit: Int!): SudokuFeed!
+
+  """"""
+  createdAt: DateTime!
+
+  """"""
+  updatedAt: DateTime!
+
+  """"""
+  username: String!
+
+  """"""
+  email: String
+
+  """"""
+  roles: [String!]!
+}
+
+type AuthResponse {
+  """"""
+  access_token: String!
+}
+
+type Query {
+  """"""
+  user(userId: ID!): User!
+
+  """"""
+  userFeed(userCursor: ID, usersLimit: Int!): [UserFeed!]!
+
+  """"""
+  myAccount: MyAccount!
+  sudokuFeed(sudokuCursor: ID, sudokusLimit: Int!): SudokuFeed!
+  sudoku(sudokuId: ID!): Sudoku!
+}
+
+type Mutation {
+  """"""
+  updateOneUserUsername(updateOneUserUsername: UpdateOneUsernameInput!): User!
+
+  """"""
+  removeOneUser(removeOneUserInput: RemoveOneInput!): User!
+
+  """"""
+  grantAdminPermissions(grantAdminPermissionsInput: GrantAdminPermissionsInput!): User!
+
+  """"""
+  updateMyUsername(updateMyUsernameInput: UpdateMyUsernameInput!): MyAccount!
+
+  """"""
+  updateMyEmail(updateMyEmailInput: UpdateMyEmailInput!): MyAccount!
+  activateEmail(token: String!): MyAccount!
+
+  """"""
+  updateMyPassword(updateMyPasswordInput: UpdateMyPasswordInput!): MyAccount!
+
+  """"""
+  removeMyAccount: MyAccount!
+  singUp(signUpInput: SignUpInput!): AuthResponse!
+  singIn(signInInput: SignInInput!): AuthResponse!
+  forgotPassword(forgotPasswordInput: ForgotPasswordInput!): String!
+  resetPassword(resetPasswordInput: ResetPasswordInput!): AuthResponse!
+  createSudoku(createSudokusInput: CreateSudokuInput!): Sudoku!
+  updateSudoku(updateSudokuInput: UpdateSudokuInput!): Sudoku!
+  removeSudoku(removeSudokuInput: RemoveSudokuInput!): Sudoku!
+  toggleFavoriteSudoku(toggleFavoriteSudokuInput: ToggleFavoriteSudokuInput!): Sudoku!
+}
+
+""""""
+input UpdateOneUsernameInput {
+  """"""
+  userId: ID!
+
+  """"""
+  newUsername: String!
+}
+
+""""""
+input RemoveOneInput {
+  """"""
+  userId: ID!
+}
+
+""""""
+input GrantAdminPermissionsInput {
+  """"""
+  userId: ID!
+}
+
+""""""
+input UpdateMyUsernameInput {
+  """"""
+  newUsername: String!
+}
+
+""""""
+input UpdateMyEmailInput {
+  """"""
+  email: String!
+}
+
+""""""
+input UpdateMyPasswordInput {
+  """"""
+  password: String!
+}
+
+""""""
+input SignUpInput {
+  """"""
+  username: String!
+
+  """"""
+  email: String
+
+  """"""
+  password: String!
+}
+
+""""""
+input SignInInput {
+  """"""
+  username: String!
+
+  """"""
+  password: String!
+}
+
+""""""
+input ForgotPasswordInput {
+  """"""
+  email: String!
+}
+
+""""""
+input ResetPasswordInput {
+  """"""
+  token: String!
+
+  """"""
+  password: String!
+}
+
+input CreateSudokuInput {
+  """"""
+  content: String!
+}
+
+input UpdateSudokuInput {
+  sudokuId: ID!
+  sudokuContent: String!
+}
+
+input RemoveSudokuInput {
+  """"""
+  sudokuId: ID!
+}
+
+input ToggleFavoriteSudokuInput {
+  """"""
+  sudokuId: ID!
+}

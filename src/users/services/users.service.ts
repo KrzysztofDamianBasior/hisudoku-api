@@ -4,99 +4,262 @@ import {
   Injectable,
   forwardRef,
 } from '@nestjs/common';
-import { UsersRepository } from '../db/users.repository';
-import { User as DBUser } from '../db/user.schema';
-import { User as GQLUser } from '../models/user.model';
-import * as bcrypt from 'bcrypt';
-import { AuthService } from 'src/auth/services/auth.service';
 import { ConfigService } from '@nestjs/config';
+import { GraphQLError } from 'graphql';
+import * as bcrypt from 'bcrypt';
+
+import { SudokusService } from 'src/sudokus/services/sudokus.service';
+import { AuthService } from 'src/auth/services/auth.service';
+import { Role } from 'src/auth/roles';
+import { UsersRepository } from '../db/users.repository';
+
+import { User as GQLUser } from '../models/user.model';
+import { MyAccount } from '../models/myAccount.model';
+import { UserFeed } from '../models/userFeed.model';
+
+import { FindOneUserArgs } from '../dto/args/find-one-user.args';
+import { UserFeedArgs } from '../dto/args/user-feed.args';
+import { GrantAdminPermissionsInput } from '../dto/input/grant-admin-permissions.input';
+
+export type MyAccountWithoutNestedFields = Omit<MyAccount, 'createdSudokus'>;
 
 @Injectable()
 export class UsersService {
   constructor(
     private readonly usersRepository: UsersRepository,
+    private readonly configService: ConfigService,
     @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
-    private readonly configService: ConfigService,
+    @Inject(forwardRef(() => SudokusService))
+    private readonly sudokusService: SudokusService,
   ) {}
 
-  async create({
+  async removeMyAccountById({
+    userId,
+  }: {
+    userId: string;
+  }): Promise<MyAccountWithoutNestedFields> {
+    return this.usersRepository.removeOneById({ userId });
+  }
+
+  async removeOne({ userId }: { userId: string }): Promise<GQLUser> {
+    const user = await this.usersRepository.removeOneById({ userId });
+    return {
+      id: user.id,
+      roles: user.roles,
+      username: user.username,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+  }
+
+  async activateEmail({
+    token,
+  }: {
+    token: string;
+  }): Promise<MyAccountWithoutNestedFields> {
+    return this.authService.activateEmail({ token });
+  }
+
+  async updateMyEmail({
+    newEmail,
+    userId,
+  }: {
+    newEmail: string;
+    userId: string;
+  }): Promise<MyAccountWithoutNestedFields> {
+    const doesEmailExistInTheDB = await this.usersRepository.doesEmailExist({
+      email: newEmail,
+    });
+    if (doesEmailExistInTheDB) {
+      // throw new GraphQLError(
+      throw new BadRequestException(
+        'this email address already exists in the database, the email address for each account must be unique',
+      );
+    }
+    const user = await this.usersRepository.updateOneEmail({
+      userId,
+      newUsername: 'waiting for verification',
+    });
+    await this.authService.sendActivateEmailLink({
+      username: user.username,
+      email: newEmail,
+      id: user.id,
+    });
+    return user;
+  }
+
+  async updateMyUsername({
+    userId,
+    newUsername,
+  }: {
+    userId: string;
+    newUsername: string;
+  }): Promise<MyAccountWithoutNestedFields> {
+    const doesUsernameExistInTheDB =
+      await this.usersRepository.doesUsernameExist({ username: newUsername });
+    if (doesUsernameExistInTheDB) {
+      throw new BadRequestException('this username is already taken');
+    }
+    return this.usersRepository.updateOneUsername({ userId, newUsername });
+  }
+
+  async updateOneUsername({
+    newUsername,
+    userId,
+  }: {
+    newUsername: string;
+    userId: string;
+  }): Promise<GQLUser> {
+    const doesUsernameExistInTheDB =
+      await this.usersRepository.doesUsernameExist({ username: newUsername });
+    if (doesUsernameExistInTheDB) {
+      throw new BadRequestException('this username is already taken');
+    }
+    const user = await this.usersRepository.updateOneUsername({
+      userId,
+      newUsername,
+    });
+    return {
+      id: user.id,
+      roles: user.roles,
+      username: user.username,
+      createdAt: user.createdAt,
+      updatedAt: user.createdAt,
+    };
+  }
+
+  async createOne({
     username,
     plainTextPassword,
+    roles,
     email,
   }: {
     username: string;
     plainTextPassword: string;
+    roles: Role[];
     email?: string;
-  }): Promise<GQLUser> {
+  }): Promise<MyAccountWithoutNestedFields> {
+    const doesUsernameExistInTheDB =
+      await this.usersRepository.doesUsernameExist({ username });
+    if (doesUsernameExistInTheDB) {
+      // throw new GraphQLError
+      throw new BadRequestException('this username is already taken');
+    }
+
     const salt = await bcrypt.genSalt(
       this.configService.get<number>('SALT_LENGTH'),
     );
     const hashedPassword = await bcrypt.hash(plainTextPassword, salt);
-    const user: DBUser = {
+    const payload = {
       username,
       email: '',
-      password: hashedPassword,
+      roles,
+      hashedPassword: hashedPassword,
       resetLink: '',
-      roles: ['User'],
     };
-    if (email && email.length > 3) {
-      user.email = 'waiting for verification';
-      const newUser = await this.usersRepository.createOne(user);
+    if (email) {
+      const doesEmailExistInTheDB = await this.usersRepository.doesEmailExist({
+        email,
+      });
+      if (doesEmailExistInTheDB) {
+        throw new BadRequestException(
+          'this email address already exists in the database, the email address for each account must be unique',
+        );
+      }
+      payload.email = 'waiting for verification';
+      const newUser = await this.usersRepository.createOne(payload);
+      await this.authService.sendActivateEmailLink({
+        username: newUser.username,
+        email: newUser.email,
+        id: newUser.id,
+      });
       return newUser;
-      // token = sendActivateLink
-      // return this.usersRepository.updateResetLink
     } else {
-      return await this.usersRepository.createOne(user);
+      return await this.usersRepository.createOne(payload);
     }
   }
 
-  async sendActivateLinkAndSetResetLink({
-    sub,
+  async doesUsernameExist({ username }: { username: string }) {
+    return this.usersRepository.doesUsernameExist({ username });
+  }
+
+  async doesEmailExist({ email }: { email: string }) {
+    return this.usersRepository.doesEmailExist({ email });
+  }
+
+  async findPasswordByUsername({
     username,
+  }: {
+    username: string;
+  }): Promise<{ password: string }> {
+    return this.usersRepository.findOnePrivateDetailsByUsername({ username });
+  }
+
+  async findManyByTheirIds({
+    ids,
+    cursor,
+    limit,
+  }: {
+    ids: string[];
+    cursor: string;
+    limit: number;
+  }): Promise<UserFeed> {
+    return this.usersRepository.userFeedByTheirIds({ ids, cursor, limit });
+  }
+
+  async findOneById({ userId }: FindOneUserArgs): Promise<GQLUser> {
+    return this.usersRepository.findOnePublicDetailsById({ userId });
+  }
+
+  async userFeed({ userCursor, usersLimit }: UserFeedArgs): Promise<UserFeed> {
+    return this.usersRepository.userFeed({
+      cursor: userCursor,
+      limit: usersLimit,
+    });
+  }
+
+  async findMyAccountById({
+    userId,
+  }: {
+    userId: string;
+  }): Promise<MyAccountWithoutNestedFields> {
+    return this.usersRepository.findOneOpenDetailsById({ userId });
+  }
+
+  async grantAdminPermissions({
+    userId,
+  }: GrantAdminPermissionsInput): Promise<GQLUser> {
+    return this.usersRepository.updateOneRoles({
+      userId,
+      newRoles: ['User', 'Admin'],
+    });
+  }
+
+  async findOneByUsername({
+    username,
+  }: {
+    username: string;
+  }): Promise<GQLUser> {
+    return this.usersRepository.findOnePublicDetailsByUsername({ username });
+  }
+
+  async findMyAccountByEmail({
     email,
   }: {
-    sub: string;
-    username: string;
     email: string;
+  }): Promise<MyAccountWithoutNestedFields> {
+    return this.usersRepository.findOneOpenDetailsByEmail({ email });
+  }
+
+  async findOneByResetPasswordLink({
+    resetPasswordLink,
+  }: {
+    resetPasswordLink: string;
   }): Promise<GQLUser> {
-    // const resetLink = await this.authService.sendActivateLink({
-    //   id: sub,
-    //   username,
-    //   email,
-    // });
-    //return this.usersRepository.updateResetLink({ resetLink, id: sub });
-    return null;
-  }
-
-  async findPasswordByUsername(username: string): Promise<{
-    password: string;
-  }> {
-    return this.usersRepository.findPasswordByUsername(username);
-  }
-
-  async remove(userId: string): Promise<GQLUser> {
-    return this.usersRepository.removeById(userId);
-  }
-
-  async grantAdminPermissions(id): Promise<GQLUser> {
-    return this.usersRepository.updateRoles({ id, roles: ['User', 'Admin'] });
-  }
-
-  async findById(id: string): Promise<GQLUser> {
-    return this.usersRepository.findOneById(id);
-  }
-
-  async findByUsername(username: string): Promise<GQLUser> {
-    return this.usersRepository.findOne({ username });
-  }
-
-  async findByEmail(email: string): Promise<GQLUser> {
-    return this.usersRepository.findOne({ email });
-  }
-
-  async findByResetLink(resetLink: string): Promise<GQLUser> {
-    return this.usersRepository.findOne({ resetLink });
+    return this.usersRepository.findOnePublicDetailsByResetPasswordLink({
+      resetPasswordLink,
+    });
   }
 
   async all({
@@ -112,76 +275,55 @@ export class UsersService {
       perPage,
     });
   }
-  async updateEmailAndRemoveResetLink({
-    resetLink,
-    email,
-  }: {
-    resetLink: string;
-    email: string;
-  }): Promise<GQLUser> {
-    return this.usersRepository.updateEmailAndRemoveResetLink({
-      email,
-      resetLink,
-    });
-  }
-  async updatePasswordAndRemoveResetLink({
-    resetLink,
+
+  async updatePasswordAndRemoveResetPasswordLink({
+    resetPasswordLink,
     password,
   }: {
-    resetLink: string;
+    resetPasswordLink: string;
     password: string;
-  }): Promise<GQLUser> {
+  }): Promise<MyAccountWithoutNestedFields> {
     const salt = await bcrypt.genSalt(
       this.configService.get<number>('SALT_LENGTH'),
     );
-    return this.usersRepository.updatePasswordAndRemoveResetLink({
-      password: await bcrypt.hash(password, salt),
-      resetLink,
+    return this.usersRepository.updateOnePasswordAndRemoveResetPasswordLink({
+      newPassword: await bcrypt.hash(password, salt),
+      resetPasswordLink,
     });
   }
 
-  async updateResetLink({
-    resetLink,
-    id,
+  async updateResetPasswordLink({
+    resetPasswordLink,
+    userId,
   }: {
-    resetLink: string;
-    id: string;
+    resetPasswordLink: string;
+    userId: string;
   }): Promise<GQLUser> {
-    return this.usersRepository.updateResetLink({ id, resetLink });
+    return this.usersRepository.updateResetPasswordLink({
+      userId,
+      newResetPasswordLink: resetPasswordLink,
+    });
   }
 
-  async updatePassword({
-    id,
-    plainTextPassword,
+  async updateMyPassword({
+    userId,
+    password,
   }: {
-    id: string;
-    plainTextPassword: string;
-  }): Promise<GQLUser> {
+    userId: string;
+    password: string;
+  }): Promise<MyAccountWithoutNestedFields> {
     const salt = await bcrypt.genSalt(
       this.configService.get<number>('SALT_LENGTH'),
     );
-    const hashedPassword = await bcrypt.hash(plainTextPassword, salt);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    return this.usersRepository.updatePassword({
-      id,
-      password: hashedPassword,
+    return this.usersRepository.updateOnePassword({
+      userId,
+      newPassword: hashedPassword,
     });
   }
 
-  async updateUsername({
-    id,
-    username,
-  }: {
-    id: string;
-    username: string;
-  }): Promise<GQLUser> {
-    if (this.usersRepository.isUsernameExist(username)) {
-      throw new BadRequestException('this username is already taken');
-    }
-    return this.usersRepository.updateUsername({ id, username });
-  }
-
-  async edit(
+  async forceEdit(
     id: string,
     {
       email,
@@ -194,7 +336,7 @@ export class UsersService {
       plainTextPassword?: string;
       resetLink?: string;
     },
-  ): Promise<GQLUser> {
+  ): Promise<MyAccountWithoutNestedFields> {
     const update: { [key: string]: unknown } = {};
     if (username) update.username = username;
     if (email) {

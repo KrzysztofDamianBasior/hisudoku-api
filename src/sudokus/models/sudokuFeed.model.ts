@@ -1,6 +1,7 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Sudoku } from './sudoku.model';
 import { IsBoolean, IsString } from 'class-validator';
+
+import { Sudoku } from './sudoku.model';
 
 @ObjectType()
 export class SudokuFeed {

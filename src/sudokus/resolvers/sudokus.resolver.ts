@@ -6,22 +6,27 @@ import {
   ResolveField,
   Parent,
 } from '@nestjs/graphql';
+import { UseGuards } from '@nestjs/common';
+
 import { SudokusService } from '../services/sudokus.service';
+
+import { Roles } from 'src/auth/roles';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { GqlAuthGuard } from 'src/auth/guards/gql-auth.guard';
+import { CurrentUser } from 'src/auth/current-user.decorator';
+
 import { CreateSudokuInput } from '../dto/input/create-sudoku.input';
 import { UpdateSudokuInput } from '../dto/input/update-sudoku.input';
-import { Roles } from 'src/auth/roles';
-import { Sudoku } from '../models/sudoku.model';
-import { SudokuFeed } from '../models/sudokuFeed.model';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { GqlAuthGuard } from 'src/auth/guards/gql-auth.guard';
-import { UseGuards } from '@nestjs/common';
-import { CurrentUser } from 'src/auth/current-user.decorator';
-import { FindManySudokusArgs } from '../dto/args/find-many-sudokus.args';
+import { SudokuFeedArgs } from '../dto/args/sudoku-feed.args';
 import { FindOneSudokuArgs } from '../dto/args/find-one-sudoku.args';
 import { ToggleFavoriteSudokuInput } from '../dto/input/toggle-favorite-sudoku.input';
-import { User } from 'src/users/models/user.model';
 import { RemoveSudokuInput } from '../dto/input/remove-sudoku.input';
+import { FindSudokuFavoritedByArgs } from '../dto/args/find-sudoku-favoritedBy-args';
+
+import { Sudoku } from '../models/sudoku.model';
+import { SudokuFeed } from '../models/sudokuFeed.model';
+import { User as GQLUser } from 'src/users/models/user.model';
+import { UserFeed } from 'src/users/models/userFeed.model';
 
 @Roles('User')
 @Resolver(() => Sudoku)
@@ -30,38 +35,25 @@ export class SudokusResolver {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   // Queries
-
-  @UseGuards(GqlAuthGuard)
-  @UseGuards(JwtAuthGuard)
-  @UseGuards(RolesGuard)
-  @Query(() => [SudokuFeed], { name: 'sudokus' })
-  async findManySudokus(
-    @CurrentUser() user: User,
-    @Args() findManySudokusArgs: FindManySudokusArgs,
+  @Query(() => SudokuFeed, { name: 'sudokuFeed' })
+  async sudokuFeed(
+    @Args() sudokuFeedArgs: SudokuFeedArgs,
   ): Promise<SudokuFeed> {
-    return this.sudokusService.findManySudokus(findManySudokusArgs);
+    return this.sudokusService.sudokuFeed(sudokuFeedArgs);
   }
 
-  @UseGuards(GqlAuthGuard)
-  @UseGuards(JwtAuthGuard)
-  @UseGuards(RolesGuard)
-  @Query(() => Sudoku, { name: 'sudokus' })
-  async findOne(
-    @CurrentUser() user: User,
-    @Args() findOneSudokuArgs: FindOneSudokuArgs,
-  ): Promise<Sudoku> {
+  @Query(() => Sudoku, { name: 'sudoku' })
+  async findOne(@Args() findOneSudokuArgs: FindOneSudokuArgs): Promise<Sudoku> {
     return this.sudokusService.findOneSudoku(findOneSudokuArgs);
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   // Mutations
-
   @UseGuards(GqlAuthGuard)
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku)
+  @Mutation(() => Sudoku, { name: 'createSudoku' })
   async createSudoku(
-    @CurrentUser() user: User,
+    @CurrentUser() user: GQLUser,
     @Args('createSudokusInput') createSudokuInput: CreateSudokuInput,
   ): Promise<Sudoku> {
     return this.sudokusService.createSudoku({
@@ -71,11 +63,10 @@ export class SudokusResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku)
+  @Mutation(() => Sudoku, { name: 'updateSudoku' })
   async updateSudoku(
-    @CurrentUser() user: User,
+    @CurrentUser() user: GQLUser,
     @Args('updateSudokuInput') updateSudokuInput: UpdateSudokuInput,
   ): Promise<Sudoku> {
     return this.sudokusService.updateSudokuContent({
@@ -85,22 +76,20 @@ export class SudokusResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku)
+  @Mutation(() => Sudoku, { name: 'removeSudoku' })
   async removeSudoku(
-    @CurrentUser() user: User,
+    @CurrentUser() user: GQLUser,
     @Args('removeSudokuInput') removeSudokuInput: RemoveSudokuInput,
   ): Promise<Sudoku> {
     return this.sudokusService.remove({ userId: user.id, removeSudokuInput });
   }
 
   @UseGuards(GqlAuthGuard)
-  @UseGuards(JwtAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku)
+  @Mutation(() => Sudoku, { name: 'toggleFavoriteSudoku' })
   async toggleFavorite(
-    @CurrentUser() user: User,
+    @CurrentUser() user: GQLUser,
     @Args('toggleFavoriteSudokuInput')
     toggleFavoriteSudokuInput: ToggleFavoriteSudokuInput,
   ) {
@@ -112,17 +101,20 @@ export class SudokusResolver {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   // Nested Queries
-  @ResolveField()
-  async author(@Parent() sudoku: Sudoku): Promise<User> {
-    return this.sudokusService.findSudokuAuthor(sudoku.id);
+  @ResolveField('author', () => GQLUser)
+  async author(@Parent() sudoku: Sudoku): Promise<GQLUser> {
+    return this.sudokusService.findSudokuAuthor({ sudokuId: sudoku.id });
   }
 
-  @ResolveField()
-  async favoritedBy(@Parent() sudoku: Sudoku): Promise<User[]> {
+  @ResolveField('favoritedBy', () => UserFeed)
+  async favoritedBy(
+    @Parent() sudoku: Sudoku,
+    @Args() findSudokuFavoritedBy: FindSudokuFavoritedByArgs,
+  ): Promise<UserFeed> {
     return this.sudokusService.findUsersWhoLikeSudoku({
       sudokuId: sudoku.id,
-      favoritedByCursor: null,
-      favoritedByLimit: 50,
+      favoritedByCursor: findSudokuFavoritedBy.userCursor,
+      favoritedByLimit: findSudokuFavoritedBy.usersLimit,
     });
   }
 }

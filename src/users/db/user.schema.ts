@@ -5,16 +5,13 @@ export type UserDocument = HydratedDocument<User>;
 @Schema({ timestamps: true })
 export class User {
   @Prop()
-  createdAt?: Date;
-
-  @Prop()
-  updatedAt?: Date;
+  id?: string;
 
   @Prop({ type: String, required: true, unique: true, minlength: 5 })
   username: string;
 
   @Prop({ type: String, default: '' })
-  email: string;
+  email?: string;
 
   @Prop({ type: [String], required: true })
   roles: string[];
@@ -23,7 +20,13 @@ export class User {
   password: string;
 
   @Prop({ type: String, default: '' })
-  resetLink: string;
+  resetPasswordLink: string;
+
+  @Prop()
+  createdAt?: Date;
+
+  @Prop()
+  updatedAt?: Date;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

@@ -3,7 +3,7 @@ import { InputType, Field, ID } from '@nestjs/graphql';
 
 @InputType()
 export class RemoveSudokuInput {
+  @Field(() => ID, { description: '' })
   @IsString()
-  @Field(() => ID)
   sudokuId: string;
 }
