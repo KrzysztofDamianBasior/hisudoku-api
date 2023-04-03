@@ -22,7 +22,7 @@ import { UpdateMyPasswordInput } from '../dto/input/update-my-password.input';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { GqlAuthGuard } from 'src/auth/guards/gql-auth.guard';
 import { jwtPayload } from 'src/auth/jwtPayload';
-import { ActivateEmailInput } from '../dto/input/activate-email.input';
+import { ActivateEmailInput } from '../../auth/dto/activate-email.input';
 import { SudokuFeedArgs } from '../dto/args/sudoku-feed.args';
 
 @Resolver(() => MyAccount)
@@ -65,13 +65,6 @@ export class MyAccountResolver {
       userId: user.sub,
       newEmail: updateMyEmailInput.email,
     });
-  }
-
-  @Mutation(() => MyAccount, { name: 'activateEmail', description: '' })
-  async activateEmail(
-    @Args('activateEmailInput') activateEmailInput: ActivateEmailInput,
-  ): Promise<Omit<MyAccount, 'createdSudokus'>> {
-    return this.usersService.activateEmail({ token: activateEmailInput.token });
   }
 
   @UseGuards(GqlAuthGuard)

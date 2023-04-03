@@ -6,9 +6,6 @@ import { UserDocument, User as DBUser } from './user.schema';
 
 import { Role } from 'src/auth/roles';
 
-// import { User as GQLUser } from '../models/user.model';
-// import { UserFeed } from '../models/userFeed.model';
-
 export type PublicUserDetails = {
   id: string;
   username: string;
@@ -86,6 +83,9 @@ export class UsersRepository {
     userId: string | Types.ObjectId;
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findOneAndDelete({ _id: userId });
+    if (!user) {
+      throw new NotFoundException();
+    }
     const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -103,6 +103,7 @@ export class UsersRepository {
     username: string;
   }): Promise<PrivateUserDetails> {
     const user = await this.userModel.findOne({ username });
+
     if (!user) {
       throw new NotFoundException();
     }
@@ -119,6 +120,9 @@ export class UsersRepository {
     userId: string;
   }): Promise<PrivateUserDetails> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
     const privateData: PrivateUserDetails = {
       password: user.password,
       resetPasswordLink: user.resetPasswordLink,
@@ -207,6 +211,9 @@ export class UsersRepository {
     userFilterQuery: FilterQuery<PublicUserDetails>;
   }): Promise<PublicUserDetails> {
     const user = await this.userModel.findOne(userFilterQuery);
+    if (!user) {
+      throw new NotFoundException();
+    }
     const userData: PublicUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -223,6 +230,9 @@ export class UsersRepository {
     userId: string | Types.ObjectId;
   }): Promise<PublicUserDetails> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
     const userData: PublicUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -239,6 +249,9 @@ export class UsersRepository {
     userId: string | Types.ObjectId;
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
     const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -256,6 +269,9 @@ export class UsersRepository {
     email: string | Types.ObjectId;
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findOne({ email });
+    if (!user) {
+      throw new NotFoundException();
+    }
     const userData: OpenUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -273,6 +289,9 @@ export class UsersRepository {
     username: string | Types.ObjectId;
   }): Promise<PublicUserDetails> {
     const user = await this.userModel.findOne({ username });
+    if (!user) {
+      throw new NotFoundException();
+    }
     const userData: PublicUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -289,6 +308,9 @@ export class UsersRepository {
     resetPasswordLink: string | Types.ObjectId;
   }): Promise<PublicUserDetails> {
     const user = await this.userModel.findOne({ resetPasswordLink });
+    if (!user) {
+      throw new NotFoundException();
+    }
     const userData: PublicUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -375,6 +397,9 @@ export class UsersRepository {
     newResetPasswordLink: string;
   }): Promise<PublicUserDetails> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
     user.resetPasswordLink = newResetPasswordLink;
     await user.save();
     const userData: PublicUserDetails = {
@@ -395,6 +420,9 @@ export class UsersRepository {
     newPassword: string;
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findOne({ resetPasswordLink });
+    if (!user) {
+      throw new NotFoundException();
+    }
     user.password = newPassword;
     user.resetPasswordLink = '';
     await user.save();
@@ -417,6 +445,9 @@ export class UsersRepository {
     newUsername: string;
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
     user.username = newUsername;
     await user.save();
     const userData: OpenUserDetails = {
@@ -432,13 +463,16 @@ export class UsersRepository {
 
   async updateOneEmail({
     userId,
-    newUsername,
+    newEmail,
   }: {
     userId: string | Types.ObjectId;
-    newUsername: string;
+    newEmail: string;
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findById(userId);
-    user.username = newUsername;
+    if (!user) {
+      throw new NotFoundException();
+    }
+    user.email = newEmail;
     await user.save();
     const userData: OpenUserDetails = {
       id: user._id.toString(),
@@ -459,6 +493,9 @@ export class UsersRepository {
     newPassword: string;
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
     user.password = newPassword;
     await user.save();
     const userData: OpenUserDetails = {
@@ -480,6 +517,9 @@ export class UsersRepository {
     newRoles: Role[];
   }): Promise<PublicUserDetails> {
     const user = await this.userModel.findById(userId);
+    if (!user) {
+      throw new NotFoundException();
+    }
     user.roles = newRoles;
     await user.save();
     const userData: PublicUserDetails = {
@@ -506,6 +546,9 @@ export class UsersRepository {
         new: true,
       },
     );
+    if (!newUser) {
+      throw new NotFoundException();
+    }
     const userData: OpenUserDetails = {
       id: newUser._id.toString(),
       username: newUser.username,

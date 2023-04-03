@@ -90,9 +90,16 @@ type MyAccount {
   roles: [String!]!
 }
 
+"""A response returned in the authentication process."""
 type AuthResponse {
-  """"""
+  """The user authentication token."""
   access_token: String!
+}
+
+"""A structure with information or instructions"""
+type MessageResponse {
+  """A message with process status information"""
+  message: String!
 }
 
 type Query {
@@ -123,16 +130,26 @@ type Mutation {
 
   """"""
   updateMyEmail(updateMyEmailInput: UpdateMyEmailInput!): MyAccount!
-  activateEmail(token: String!): MyAccount!
 
   """"""
   updateMyPassword(updateMyPasswordInput: UpdateMyPasswordInput!): MyAccount!
 
   """"""
   removeMyAccount: MyAccount!
+
+  """A mutation that allows the user to create an account"""
   singUp(signUpInput: SignUpInput!): AuthResponse!
+
+  """A mutation that allows the user to authenticate himself"""
   singIn(signInInput: SignInInput!): AuthResponse!
-  forgotPassword(forgotPasswordInput: ForgotPasswordInput!): String!
+
+  """A mutation that activates the user's email"""
+  activateEmail(activateEmailInput: ActivateEmailInput!): MyAccount!
+
+  """A mutation that starts the user's password recovery procedure"""
+  forgotPassword(forgotPasswordInput: ForgotPasswordInput!): MessageResponse!
+
+  """A mutation that resets the user's password"""
   resetPassword(resetPasswordInput: ResetPasswordInput!): AuthResponse!
   createSudoku(createSudokusInput: CreateSudokuInput!): Sudoku!
   updateSudoku(updateSudokuInput: UpdateSudokuInput!): Sudoku!
@@ -179,40 +196,62 @@ input UpdateMyPasswordInput {
   password: String!
 }
 
-""""""
+"""The parameters used by the auth resolver to create a new user account."""
 input SignUpInput {
-  """"""
+  """
+  A name used to identify the user. The name should be longer than 5 characters and not exceed 255 characters.
+  """
   username: String!
 
-  """"""
+  """
+  An optional e-mail address used in the password recovery process. The email should be longer than 5 characters and not exceed 255 characters.
+  """
   email: String
 
-  """"""
+  """
+  The password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
+  """
   password: String!
 }
 
-""""""
+"""The parameters used by the resolver to log in the user."""
 input SignInInput {
-  """"""
+  """
+  A name used to identify the user. The name should be longer than 5 characters and not exceed 255 characters.
+  """
   username: String!
 
-  """"""
+  """
+  The password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
+  """
   password: String!
 }
 
-""""""
+"""The parameters used by the auth resolver to activate the email address"""
+input ActivateEmailInput {
+  """An authentication token"""
+  token: String!
+}
+
+"""
+The parameters used by the resolver to start the password recovery procedure
+"""
 input ForgotPasswordInput {
-  """"""
+  """
+  An e-mail address used in the password recovery process. The email should be longer than 5 characters and not exceed 255 characters.
+  """
   email: String!
 }
 
-""""""
+"""The parameters used by the auth resolver to reset the user's password"""
 input ResetPasswordInput {
-  """"""
+  """An authentication token"""
   token: String!
 
-  """"""
-  password: String!
+  """
+  A new password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
+  """
+  newPassword: String!
 }
 
 input CreateSudokuInput {

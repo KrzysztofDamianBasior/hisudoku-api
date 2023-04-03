@@ -11,9 +11,3 @@ export const CurrentUser = createParamDecorator(
     return ctx.getContext().req.user;
   },
 );
-
-// @Query(returns => User)
-// @UseGuards(GqlAuthGuard)
-// whoAmI(@CurrentUser() user: User) {
-//   return this.usersService.findById(user.id);
-// }

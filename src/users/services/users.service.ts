@@ -54,11 +54,26 @@ export class UsersService {
   }
 
   async activateEmail({
-    token,
+    newEmail,
+    userId,
   }: {
-    token: string;
+    newEmail: string;
+    userId: string;
   }): Promise<MyAccountWithoutNestedFields> {
-    return this.authService.activateEmail({ token });
+    const doesEmailExistInTheDB = await this.usersRepository.doesEmailExist({
+      email: newEmail,
+    });
+    if (doesEmailExistInTheDB) {
+      // throw new GraphQLError(
+      throw new BadRequestException(
+        'this email address already exists in the database, the email address for each account must be unique',
+      );
+    }
+    const user = await this.usersRepository.updateOneEmail({
+      userId,
+      newEmail: newEmail,
+    });
+    return user;
   }
 
   async updateMyEmail({
@@ -79,7 +94,7 @@ export class UsersService {
     }
     const user = await this.usersRepository.updateOneEmail({
       userId,
-      newUsername: 'waiting for verification',
+      newEmail: 'waiting for verification',
     });
     await this.authService.sendActivateEmailLink({
       username: user.username,
@@ -170,8 +185,8 @@ export class UsersService {
       payload.email = 'waiting for verification';
       const newUser = await this.usersRepository.createOne(payload);
       await this.authService.sendActivateEmailLink({
+        email: email,
         username: newUser.username,
-        email: newUser.email,
         id: newUser.id,
       });
       return newUser;

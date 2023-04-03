@@ -18,6 +18,7 @@ import { jwtPayload } from '../jwtPayload';
 import { MyAccount } from 'src/users/models/myAccount.model';
 
 import { User as GQLUser } from 'src/users/models/user.model';
+import { MessageResponse } from '../models/message-response.model';
 
 @Injectable()
 export class AuthService {
@@ -149,7 +150,7 @@ export class AuthService {
     const { email, sub }: { email: string; sub: string } =
       await this.jwtService.verify(token);
     if (email && sub) {
-      return this.usersService.updateMyEmail({
+      return this.usersService.activateEmail({
         userId: sub,
         newEmail: email,
       });
@@ -158,7 +159,7 @@ export class AuthService {
     }
   }
 
-  async forgotPassword({ email }: { email: string }): Promise<string> {
+  async forgotPassword({ email }: { email: string }): Promise<MessageResponse> {
     const user = await this.usersService.findMyAccountByEmail({ email });
     const payload = {
       id: user.id,
@@ -175,7 +176,10 @@ export class AuthService {
       email: payload.email,
       token: token,
     });
-    return 'Email was sent';
+    const response: MessageResponse = {
+      message: 'Email was sent',
+    };
+    return response;
   }
 
   async resetPassword({
