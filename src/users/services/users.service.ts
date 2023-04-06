@@ -1,16 +1,18 @@
 import {
   BadRequestException,
+  NotFoundException,
   Inject,
   Injectable,
   forwardRef,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { GraphQLError } from 'graphql';
 import * as bcrypt from 'bcrypt';
 
 import { SudokusService } from 'src/sudokus/services/sudokus.service';
+
 import { AuthService } from 'src/auth/services/auth.service';
 import { Role } from 'src/auth/roles';
+
 import { UsersRepository } from '../db/users.repository';
 
 import { User as GQLUser } from '../models/user.model';
@@ -39,11 +41,18 @@ export class UsersService {
   }: {
     userId: string;
   }): Promise<MyAccountWithoutNestedFields> {
-    return this.usersRepository.removeOneById({ userId });
+    const user = await this.usersRepository.removeOneById({ userId });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async removeOne({ userId }: { userId: string }): Promise<GQLUser> {
     const user = await this.usersRepository.removeOneById({ userId });
+    if (user == null) {
+      throw new NotFoundException();
+    }
     return {
       id: user.id,
       roles: user.roles,
@@ -73,6 +82,9 @@ export class UsersService {
       userId,
       newEmail: newEmail,
     });
+    if (user == null) {
+      throw new NotFoundException();
+    }
     return user;
   }
 
@@ -96,6 +108,11 @@ export class UsersService {
       userId,
       newEmail: 'waiting for verification',
     });
+
+    if (user == null) {
+      throw new NotFoundException();
+    }
+
     await this.authService.sendActivateEmailLink({
       username: user.username,
       email: newEmail,
@@ -116,7 +133,14 @@ export class UsersService {
     if (doesUsernameExistInTheDB) {
       throw new BadRequestException('this username is already taken');
     }
-    return this.usersRepository.updateOneUsername({ userId, newUsername });
+    const user = await this.usersRepository.updateOneUsername({
+      userId,
+      newUsername,
+    });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async updateOneUsername({
@@ -131,10 +155,14 @@ export class UsersService {
     if (doesUsernameExistInTheDB) {
       throw new BadRequestException('this username is already taken');
     }
+
     const user = await this.usersRepository.updateOneUsername({
       userId,
       newUsername,
     });
+    if (user == null) {
+      throw new NotFoundException();
+    }
     return {
       id: user.id,
       roles: user.roles,
@@ -208,7 +236,14 @@ export class UsersService {
   }: {
     username: string;
   }): Promise<{ password: string }> {
-    return this.usersRepository.findOnePrivateDetailsByUsername({ username });
+    const privateDetails =
+      await this.usersRepository.findOnePrivateDetailsByUsername({ username });
+
+    if (privateDetails == null) {
+      throw new NotFoundException();
+    }
+
+    return privateDetails;
   }
 
   async findManyByTheirIds({
@@ -224,7 +259,13 @@ export class UsersService {
   }
 
   async findOneById({ userId }: FindOneUserArgs): Promise<GQLUser> {
-    return this.usersRepository.findOnePublicDetailsById({ userId });
+    const user = await this.usersRepository.findOnePublicDetailsById({
+      userId,
+    });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async userFeed({ userCursor, usersLimit }: UserFeedArgs): Promise<UserFeed> {
@@ -239,16 +280,24 @@ export class UsersService {
   }: {
     userId: string;
   }): Promise<MyAccountWithoutNestedFields> {
-    return this.usersRepository.findOneOpenDetailsById({ userId });
+    const user = await this.usersRepository.findOneOpenDetailsById({ userId });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async grantAdminPermissions({
     userId,
   }: GrantAdminPermissionsInput): Promise<GQLUser> {
-    return this.usersRepository.updateOneRoles({
+    const user = await this.usersRepository.updateOneRoles({
       userId,
       newRoles: ['User', 'Admin'],
     });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async findOneByUsername({
@@ -256,7 +305,13 @@ export class UsersService {
   }: {
     username: string;
   }): Promise<GQLUser> {
-    return this.usersRepository.findOnePublicDetailsByUsername({ username });
+    const user = await this.usersRepository.findOnePublicDetailsByUsername({
+      username,
+    });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async findMyAccountByEmail({
@@ -264,7 +319,13 @@ export class UsersService {
   }: {
     email: string;
   }): Promise<MyAccountWithoutNestedFields> {
-    return this.usersRepository.findOneOpenDetailsByEmail({ email });
+    const user = await this.usersRepository.findOneOpenDetailsByEmail({
+      email,
+    });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async findOneByResetPasswordLink({
@@ -272,9 +333,14 @@ export class UsersService {
   }: {
     resetPasswordLink: string;
   }): Promise<GQLUser> {
-    return this.usersRepository.findOnePublicDetailsByResetPasswordLink({
-      resetPasswordLink,
-    });
+    const user =
+      await this.usersRepository.findOnePublicDetailsByResetPasswordLink({
+        resetPasswordLink,
+      });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async all({
@@ -293,49 +359,62 @@ export class UsersService {
 
   async updatePasswordAndRemoveResetPasswordLink({
     resetPasswordLink,
-    password,
+    newPassword,
   }: {
     resetPasswordLink: string;
-    password: string;
+    newPassword: string;
   }): Promise<MyAccountWithoutNestedFields> {
     const salt = await bcrypt.genSalt(
       this.configService.get<number>('SALT_LENGTH'),
     );
-    return this.usersRepository.updateOnePasswordAndRemoveResetPasswordLink({
-      newPassword: await bcrypt.hash(password, salt),
-      resetPasswordLink,
-    });
+    const user =
+      await this.usersRepository.updateOnePasswordAndRemoveResetPasswordLink({
+        newPassword: await bcrypt.hash(newPassword, salt),
+        resetPasswordLink,
+      });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async updateResetPasswordLink({
-    resetPasswordLink,
+    newResetPasswordLink,
     userId,
   }: {
-    resetPasswordLink: string;
+    newResetPasswordLink: string;
     userId: string;
   }): Promise<GQLUser> {
-    return this.usersRepository.updateResetPasswordLink({
+    const user = await this.usersRepository.updateResetPasswordLink({
       userId,
-      newResetPasswordLink: resetPasswordLink,
+      newResetPasswordLink: newResetPasswordLink,
     });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async updateMyPassword({
     userId,
-    password,
+    newPassword,
   }: {
     userId: string;
-    password: string;
+    newPassword: string;
   }): Promise<MyAccountWithoutNestedFields> {
     const salt = await bcrypt.genSalt(
       this.configService.get<number>('SALT_LENGTH'),
     );
-    const hashedPassword = await bcrypt.hash(password, salt);
+    const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    return this.usersRepository.updateOnePassword({
+    const user = await this.usersRepository.updateOnePassword({
       userId,
       newPassword: hashedPassword,
     });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   async forceEdit(
@@ -366,9 +445,13 @@ export class UsersService {
     }
     if (resetLink || resetLink === '') update.resetLink = resetLink;
 
-    return this.usersRepository.forceUpdate({
+    const newUser = await this.usersRepository.forceUpdate({
       user: { id: id },
       userFilterQuery: update,
     });
+    if (newUser == null) {
+      throw new NotFoundException();
+    }
+    return newUser;
   }
 }

@@ -17,7 +17,11 @@ export class AuthResolver {
   constructor(private readonly authService: AuthService) {}
 
   @Mutation(() => AuthResponse, {
-    description: 'A mutation that allows the user to create an account',
+    description: `
+    A mutation that allows the user to create an account
+    
+    no authentication required, no required roles, no extra http headers
+    `,
   })
   async singUp(@Args('signUpInput') signUpInput: SignUpInput) {
     return this.authService.register({
@@ -28,7 +32,11 @@ export class AuthResolver {
   }
 
   @Mutation(() => AuthResponse, {
-    description: 'A mutation that allows the user to authenticate himself',
+    description: `
+    A mutation that allows the user to authenticate himself
+    
+    no authentication required, no required roles, no extra http headers
+    `,
   })
   async singIn(
     @Args('signInInput') signInInput: SignInInput,
@@ -52,7 +60,11 @@ export class AuthResolver {
 
   @Mutation(() => MyAccount, {
     name: 'activateEmail',
-    description: "A mutation that activates the user's email",
+    description: `
+    A mutation that activates the user's email
+
+    no authentication required, no required roles, no extra http headers
+    `,
   })
   async activateEmail(
     @Args('activateEmailInput') activateEmailInput: ActivateEmailInput,
@@ -61,8 +73,11 @@ export class AuthResolver {
   }
 
   @Mutation(() => MessageResponse, {
-    description:
-      "A mutation that starts the user's password recovery procedure",
+    description: `
+    A mutation that starts the user's password recovery procedure
+      
+    no authentication required, no required roles, no extra http headers
+    `,
   })
   async forgotPassword(
     @Args('forgotPasswordInput') forgotPasswordInput: ForgotPasswordInput,
@@ -71,7 +86,11 @@ export class AuthResolver {
   }
 
   @Mutation(() => AuthResponse, {
-    description: "A mutation that resets the user's password",
+    description: `
+    A mutation that resets the user's password
+    
+    no authentication required, no required roles, no extra http headers
+    `,
   })
   async resetPassword(
     @Args('resetPasswordInput') resetPasswordInput: ResetPasswordInput,

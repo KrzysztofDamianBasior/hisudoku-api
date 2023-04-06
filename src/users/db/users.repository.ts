@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model, Types } from 'mongoose';
 
@@ -56,7 +56,6 @@ export class UsersRepository {
       resetPasswordLink: '',
     };
     const newUser = new this.userModel(user);
-
     await newUser.save();
     const userData: OpenUserDetails = {
       id: newUser._id.toString(),
@@ -81,10 +80,10 @@ export class UsersRepository {
     userId,
   }: {
     userId: string | Types.ObjectId;
-  }): Promise<OpenUserDetails> {
+  }): Promise<OpenUserDetails | null> {
     const user = await this.userModel.findOneAndDelete({ _id: userId });
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     const userData: OpenUserDetails = {
       id: user._id.toString(),
@@ -101,12 +100,13 @@ export class UsersRepository {
     username,
   }: {
     username: string;
-  }): Promise<PrivateUserDetails> {
+  }): Promise<PrivateUserDetails | null> {
     const user = await this.userModel.findOne({ username });
 
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
+
     const privateData: PrivateUserDetails = {
       password: user.password,
       resetPasswordLink: user.resetPasswordLink,
@@ -118,11 +118,13 @@ export class UsersRepository {
     userId,
   }: {
     userId: string;
-  }): Promise<PrivateUserDetails> {
+  }): Promise<PrivateUserDetails | null> {
     const user = await this.userModel.findById(userId);
+
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
+
     const privateData: PrivateUserDetails = {
       password: user.password,
       resetPasswordLink: user.resetPasswordLink,
@@ -165,12 +167,10 @@ export class UsersRepository {
     cursor: string | null;
     limit: number;
   }): Promise<UserFeed> {
-    let hasNextPage = false;
-
-    //if no cursor has been passed, the default query will be empty, it will retrieve the latest notes from the database
+    //if no cursor has been passed, the default query will be empty, it will retrieve the latest users from the database
     let cursorQuery = {};
 
-    //if a cursor has been passed, the query will look for notes whose ObjectId value is less than the cursor value
+    //if a cursor has been passed, the query will look for users whose ObjectId value is less than the cursor value
     if (cursor) {
       cursorQuery = { _id: { $lt: cursor } };
     }
@@ -180,40 +180,44 @@ export class UsersRepository {
       .sort({ _id: -1 })
       .limit(limit + 1);
 
+    let hasNextPage = false;
     if (usersCollection.length > limit) {
       hasNextPage = true;
       usersCollection = usersCollection.slice(0, -1);
     }
 
-    //the cursor is the mongo identifier of the last element in the array
-    const newCursor = usersCollection[usersCollection.length - 1].id;
+    if (usersCollection.length > 0) {
+      //the cursor is the mongo identifier of the last element in the array
+      const newCursor =
+        usersCollection[usersCollection.length - 1]._id.toString();
 
-    // const filteredCollection: string[] = [];
-    // for (const user of usersCollection) {
-    //   filteredCollection.push(user._id.toString());
-    // }
-    const filteredCollection: PublicUserDetails[] = [];
-    for (const user of usersCollection) {
-      filteredCollection.push({
-        id: user._id.toString(),
-        username: user.username,
-        roles: user.roles,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      });
+      const filteredCollection: PublicUserDetails[] = [];
+      for (const user of usersCollection) {
+        filteredCollection.push({
+          id: user._id.toString(),
+          username: user.username,
+          roles: user.roles,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        });
+      }
+      return { cursor: newCursor, hasNextPage, users: filteredCollection };
+    } else {
+      return { cursor: null, hasNextPage, users: [] };
     }
-    return { cursor: newCursor, hasNextPage, users: filteredCollection };
   }
 
   async findOnePublicDetails({
     userFilterQuery,
   }: {
     userFilterQuery: FilterQuery<PublicUserDetails>;
-  }): Promise<PublicUserDetails> {
+  }): Promise<PublicUserDetails | null> {
     const user = await this.userModel.findOne(userFilterQuery);
+
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
+
     const userData: PublicUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -228,11 +232,13 @@ export class UsersRepository {
     userId,
   }: {
     userId: string | Types.ObjectId;
-  }): Promise<PublicUserDetails> {
+  }): Promise<PublicUserDetails | null> {
     const user = await this.userModel.findById(userId);
+
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
+
     const userData: PublicUserDetails = {
       id: user._id.toString(),
       username: user.username,
@@ -247,10 +253,10 @@ export class UsersRepository {
     userId,
   }: {
     userId: string | Types.ObjectId;
-  }): Promise<OpenUserDetails> {
+  }): Promise<OpenUserDetails | null> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     const userData: OpenUserDetails = {
       id: user._id.toString(),
@@ -267,10 +273,10 @@ export class UsersRepository {
     email,
   }: {
     email: string | Types.ObjectId;
-  }): Promise<OpenUserDetails> {
+  }): Promise<OpenUserDetails | null> {
     const user = await this.userModel.findOne({ email });
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     const userData: OpenUserDetails = {
       id: user._id.toString(),
@@ -287,10 +293,10 @@ export class UsersRepository {
     username,
   }: {
     username: string | Types.ObjectId;
-  }): Promise<PublicUserDetails> {
+  }): Promise<PublicUserDetails | null> {
     const user = await this.userModel.findOne({ username });
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     const userData: PublicUserDetails = {
       id: user._id.toString(),
@@ -306,10 +312,10 @@ export class UsersRepository {
     resetPasswordLink,
   }: {
     resetPasswordLink: string | Types.ObjectId;
-  }): Promise<PublicUserDetails> {
+  }): Promise<PublicUserDetails | null> {
     const user = await this.userModel.findOne({ resetPasswordLink });
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     const userData: PublicUserDetails = {
       id: user._id.toString(),
@@ -321,26 +327,6 @@ export class UsersRepository {
     return userData;
   }
 
-  // async findManyByTheirIds({ ids }: { ids: string[] }): Promise<GQLUser[]> {
-  //   const cursorQuery: any = { _id: { $in: ids } };
-
-  //   const usersCollection = await this.userModel
-  //     .find(cursorQuery)
-  //     .sort({ _id: -1 });
-
-  //   const filteredCollection: GQLUser[] = [];
-  //   for (const user of usersCollection) {
-  //     filteredCollection.push({
-  //       id: user._id.toString(),
-  //       username: user.username,
-  //       roles: user.roles,
-  //       createdAt: user.createdAt,
-  //       updatedAt: user.updatedAt,
-  //     });
-  //   }
-  //   return filteredCollection;
-  // }
-
   async userFeedByTheirIds({
     ids,
     cursor,
@@ -350,11 +336,9 @@ export class UsersRepository {
     cursor: string | null;
     limit: number;
   }): Promise<UserFeed> {
-    let hasNextPage = false;
-
     let cursorQuery: any = { _id: { $in: ids } };
 
-    //if a cursor has been passed, the query will look for notes whose ObjectId value is less than the cursor value
+    //if a cursor has been passed, the query will look for users whose ObjectId value is less than the cursor value
     if (cursor) {
       cursorQuery = { $and: [{ $lt: cursor }, { _id: { $in: ids } }] };
     }
@@ -364,29 +348,31 @@ export class UsersRepository {
       .sort({ _id: -1 })
       .limit(limit + 1);
 
+    let hasNextPage = false;
     if (usersCollection.length > limit) {
       hasNextPage = true;
       usersCollection = usersCollection.slice(0, -1);
     }
 
-    //the cursor is the mongo identifier of the last element in the array
-    const newCursor = usersCollection[usersCollection.length - 1].id;
+    if (usersCollection.length > 0) {
+      //the cursor is the mongo identifier of the last element in the array
+      const newCursor =
+        usersCollection[usersCollection.length - 1]._id.toString();
 
-    // const filteredCollection: string[] = [];
-    // for (const user of usersCollection) {
-    //   filteredCollection.push(user._id.toString());
-    // }
-    const filteredCollection: PublicUserDetails[] = [];
-    for (const user of usersCollection) {
-      filteredCollection.push({
-        id: user._id.toString(),
-        username: user.username,
-        roles: user.roles,
-        createdAt: user.createdAt,
-        updatedAt: user.updatedAt,
-      });
+      const filteredCollection: PublicUserDetails[] = [];
+      for (const user of usersCollection) {
+        filteredCollection.push({
+          id: user._id.toString(),
+          username: user.username,
+          roles: user.roles,
+          createdAt: user.createdAt,
+          updatedAt: user.updatedAt,
+        });
+      }
+      return { cursor: newCursor, hasNextPage, users: filteredCollection };
+    } else {
+      return { cursor: null, hasNextPage, users: [] };
     }
-    return { cursor: newCursor, hasNextPage, users: filteredCollection };
   }
 
   async updateResetPasswordLink({
@@ -395,10 +381,10 @@ export class UsersRepository {
   }: {
     userId: string | Types.ObjectId;
     newResetPasswordLink: string;
-  }): Promise<PublicUserDetails> {
+  }): Promise<PublicUserDetails | null> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     user.resetPasswordLink = newResetPasswordLink;
     await user.save();
@@ -418,10 +404,10 @@ export class UsersRepository {
   }: {
     resetPasswordLink: string;
     newPassword: string;
-  }): Promise<OpenUserDetails> {
+  }): Promise<OpenUserDetails | null> {
     const user = await this.userModel.findOne({ resetPasswordLink });
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     user.password = newPassword;
     user.resetPasswordLink = '';
@@ -443,10 +429,10 @@ export class UsersRepository {
   }: {
     userId: string | Types.ObjectId;
     newUsername: string;
-  }): Promise<OpenUserDetails> {
+  }): Promise<OpenUserDetails | null> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     user.username = newUsername;
     await user.save();
@@ -470,7 +456,7 @@ export class UsersRepository {
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     user.email = newEmail;
     await user.save();
@@ -494,7 +480,7 @@ export class UsersRepository {
   }): Promise<OpenUserDetails> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     user.password = newPassword;
     await user.save();
@@ -518,7 +504,7 @@ export class UsersRepository {
   }): Promise<PublicUserDetails> {
     const user = await this.userModel.findById(userId);
     if (!user) {
-      throw new NotFoundException();
+      return null;
     }
     user.roles = newRoles;
     await user.save();
@@ -547,7 +533,7 @@ export class UsersRepository {
       },
     );
     if (!newUser) {
-      throw new NotFoundException();
+      return null;
     }
     const userData: OpenUserDetails = {
       id: newUser._id.toString(),

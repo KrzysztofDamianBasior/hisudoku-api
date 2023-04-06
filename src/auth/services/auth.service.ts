@@ -169,7 +169,7 @@ export class AuthService {
     const token = await this.jwtService.sign(payload);
     await this.usersService.updateResetPasswordLink({
       userId: user.id,
-      resetPasswordLink: token,
+      newResetPasswordLink: token,
     });
     await this.sendgridService.forgetPassword({
       username: payload.username,
@@ -194,7 +194,7 @@ export class AuthService {
 
     const user =
       await this.usersService.updatePasswordAndRemoveResetPasswordLink({
-        password,
+        newPassword: password,
         resetPasswordLink: token,
       });
     const payload = {

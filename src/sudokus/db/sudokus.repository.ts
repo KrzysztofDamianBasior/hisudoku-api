@@ -1,4 +1,9 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 
 import mongoose, { FilterQuery, Model, Types } from 'mongoose';
@@ -95,8 +100,6 @@ export class SudokusRepository {
 
     // favoritedByLimit: number;
   }): Promise<SudokuFeed> {
-    let hasNextPage = false;
-
     //if no cursor has been passed, the default query will be empty, it will retrieve the latest notes from the database
     let cursorQuery = {};
 
@@ -110,33 +113,38 @@ export class SudokusRepository {
       .sort({ _id: -1 })
       .limit(sudokusLimit + 1);
 
+    let hasNextPage = false;
     if (dBSudokus.length > sudokusLimit) {
       hasNextPage = true;
       dBSudokus = dBSudokus.slice(0, -1);
     }
 
-    //the cursor is the mongo identifier of the last element in the array
-    const newCursor = dBSudokus[dBSudokus.length - 1].id;
-    const gQLSudokus: GQLSudoku[] = [];
-    for (const sudoku of dBSudokus) {
-      // const author = await this.usersRepository.findOneById(sudoku.author);
-      // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-      //   ids: sudoku.favoritedBy.map((id) => id.toString()),
-      //   cursor: null,
-      //   limit: favoritedByLimit,
-      // });
-      gQLSudokus.push({
-        author: sudoku.author,
-        id: sudoku.id,
-        createdAt: sudoku.createdAt,
-        updatedAt: sudoku.updatedAt,
-        content: sudoku.content,
-        favoriteCount: sudoku.favoriteCount,
-        favoritedBy: sudoku.favoritedBy,
-      });
-    }
+    if (dBSudokus.length > 0) {
+      //the cursor is the mongo identifier of the last element in the array
+      const newCursor = dBSudokus[dBSudokus.length - 1]._id.toString();
+      const gQLSudokus: GQLSudoku[] = [];
+      for (const sudoku of dBSudokus) {
+        // const author = await this.usersRepository.findOneById(sudoku.author);
+        // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+        //   ids: sudoku.favoritedBy.map((id) => id.toString()),
+        //   cursor: null,
+        //   limit: favoritedByLimit,
+        // });
+        gQLSudokus.push({
+          author: sudoku.author,
+          id: sudoku.id,
+          createdAt: sudoku.createdAt,
+          updatedAt: sudoku.updatedAt,
+          content: sudoku.content,
+          favoriteCount: sudoku.favoriteCount,
+          favoritedBy: sudoku.favoritedBy,
+        });
+      }
 
-    return { sudokus: gQLSudokus, cursor: newCursor, hasNextPage };
+      return { sudokus: gQLSudokus, cursor: newCursor, hasNextPage };
+    } else {
+      return { sudokus: [], cursor: null, hasNextPage };
+    }
   }
 
   async sudokuFeedByAuthor({
@@ -164,28 +172,31 @@ export class SudokusRepository {
       dBSudokus = dBSudokus.slice(0, -1);
     }
 
-    //the cursor is the mongo identifier of the last element in the array
-    const newCursor = dBSudokus[dBSudokus.length - 1].id;
-    const gQLSudokus: GQLSudoku[] = [];
-    for (const sudoku of dBSudokus) {
-      // const author = await this.usersRepository.findOneById(sudoku.author);
-      // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
-      //   ids: sudoku.favoritedBy.map((id) => id.toString()),
-      //   cursor: null,
-      //   limit: favoritedByLimit,
-      // });
-      gQLSudokus.push({
-        author: sudoku.author,
-        id: sudoku.id,
-        createdAt: sudoku.createdAt,
-        updatedAt: sudoku.updatedAt,
-        content: sudoku.content,
-        favoriteCount: sudoku.favoriteCount,
-        favoritedBy: sudoku.favoritedBy,
-      });
+    if (dBSudokus.length > 0) {
+      //the cursor is the mongo identifier of the last element in the array
+      const newCursor = dBSudokus[dBSudokus.length - 1]._id.toString();
+      const gQLSudokus: GQLSudoku[] = [];
+      for (const sudoku of dBSudokus) {
+        // const author = await this.usersRepository.findOneById(sudoku.author);
+        // const favoritedBy = await this.usersRepository.findUsersByTheirIds({
+        //   ids: sudoku.favoritedBy.map((id) => id.toString()),
+        //   cursor: null,
+        //   limit: favoritedByLimit,
+        // });
+        gQLSudokus.push({
+          author: sudoku.author,
+          id: sudoku.id,
+          createdAt: sudoku.createdAt,
+          updatedAt: sudoku.updatedAt,
+          content: sudoku.content,
+          favoriteCount: sudoku.favoriteCount,
+          favoritedBy: sudoku.favoritedBy,
+        });
+      }
+      return { sudokus: gQLSudokus, cursor: newCursor, hasNextPage };
+    } else {
+      return { sudokus: [], cursor: null, hasNextPage: false };
     }
-
-    return { sudokus: gQLSudokus, cursor: newCursor, hasNextPage };
   }
 
   async findOne({
@@ -333,8 +344,12 @@ export class SudokusRepository {
     sudokuId: string;
   }): Promise<GQLUser> {
     const sudoku = await this.sudokuModel.findById(sudokuId);
-    return this.usersRepository.findOnePublicDetailsById({
+    const user = await this.usersRepository.findOnePublicDetailsById({
       userId: sudoku.author,
     });
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 }

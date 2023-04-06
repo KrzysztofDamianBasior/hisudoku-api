@@ -22,8 +22,9 @@ import { UpdateMyPasswordInput } from '../dto/input/update-my-password.input';
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { GqlAuthGuard } from 'src/auth/guards/gql-auth.guard';
 import { jwtPayload } from 'src/auth/jwtPayload';
-import { ActivateEmailInput } from '../../auth/dto/activate-email.input';
 import { SudokuFeedArgs } from '../dto/args/sudoku-feed.args';
+
+import { Logger } from '@nestjs/common';
 
 @Resolver(() => MyAccount)
 export class MyAccountResolver {
@@ -34,7 +35,20 @@ export class MyAccountResolver {
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   // QUERIES
   @UseGuards(GqlAuthGuard)
-  @Query(() => MyAccount, { name: 'myAccount', description: '' })
+  @Query(() => MyAccount, {
+    name: 'myAccount',
+    description: `
+    A query retrieving user account information available only to the owner
+        
+    only for logged in, no required roles
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+    `,
+  })
   async findMe(
     @CurrentUser() user: jwtPayload,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
@@ -44,7 +58,20 @@ export class MyAccountResolver {
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   // MUTATIONS
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => MyAccount, { name: 'updateMyUsername', description: '' })
+  @Mutation(() => MyAccount, {
+    name: 'updateMyUsername',
+    description: `
+    Mutation available only to the account owner that modifies the username
+            
+    only for logged in, no required roles
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+    `,
+  })
   async updateMyUsername(
     @CurrentUser() user: jwtPayload,
     @Args('updateMyUsernameInput') updateMyUsernameInput: UpdateMyUsernameInput,
@@ -56,31 +83,70 @@ export class MyAccountResolver {
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => MyAccount, { name: 'updateMyEmail', description: '' })
+  @Mutation(() => MyAccount, {
+    name: 'updateMyEmail',
+    description: `
+    A mutation available only to the account owner that starts the process of updating the e-mail address
+
+    only for logged in, no required roles
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+    `,
+  })
   async updateMyEmail(
     @CurrentUser() user: jwtPayload,
     @Args('updateMyEmailInput') updateMyEmailInput: UpdateMyEmailInput,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
     return this.usersService.updateMyEmail({
       userId: user.sub,
-      newEmail: updateMyEmailInput.email,
+      newEmail: updateMyEmailInput.newEmail,
     });
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => MyAccount, { name: 'updateMyPassword', description: '' })
+  @Mutation(() => MyAccount, {
+    name: 'updateMyPassword',
+    description: `
+    A mutation available only to the account owner that updates the password
+
+    only for logged in, no required roles
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+    `,
+  })
   async updateMyPassword(
     @CurrentUser() user: jwtPayload,
     @Args('updateMyPasswordInput') updateMyPasswordInput: UpdateMyPasswordInput,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
     return this.usersService.updateMyPassword({
       userId: user.sub,
-      password: updateMyPasswordInput.password,
+      newPassword: updateMyPasswordInput.newPassword,
     });
   }
 
   @UseGuards(GqlAuthGuard)
-  @Mutation(() => MyAccount, { name: 'removeMyAccount', description: '' })
+  @Mutation(() => MyAccount, {
+    name: 'removeMyAccount',
+    description: `
+    A mutation available only to the account owner that removes the account
+    
+    only for logged in, no required roles
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+    `,
+  })
   async removeMyAccount(
     @CurrentUser() user: jwtPayload,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
@@ -90,7 +156,9 @@ export class MyAccountResolver {
   /////////////////////////////////////////////////////////////////////////////////////////////////////////
   // NESTED QUIRES
 
-  @ResolveField('createdSudokus', () => SudokuFeed, {})
+  @ResolveField('createdSudokus', () => SudokuFeed, {
+    description: 'A list of sudokus created by the user',
+  })
   async createdSudokus(
     @Parent() user: MyAccount,
     @Args() sudokuFeedArgs: SudokuFeedArgs,

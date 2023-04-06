@@ -5,9 +5,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { join } from 'path';
 
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-
 import { validate } from './env.validation';
 
 import { UsersModule } from './users/users.module';
@@ -35,7 +32,5 @@ import { SudokusModule } from './sudokus/sudokus.module';
     AuthModule,
     SudokusModule,
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}

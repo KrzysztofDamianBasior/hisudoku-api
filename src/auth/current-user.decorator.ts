@@ -6,7 +6,6 @@ export const CurrentUser = createParamDecorator(
     if (context.getType() === 'http') {
       return context.switchToHttp().getRequest().user;
     }
-
     const ctx = GqlExecutionContext.create(context);
     return ctx.getContext().req.user;
   },

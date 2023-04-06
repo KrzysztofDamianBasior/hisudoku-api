@@ -13,6 +13,6 @@ export class SudokuFeed {
   hasNextPage: boolean;
 
   @IsString()
-  @Field(() => String, { description: '' })
+  @Field(() => String, { description: '', nullable: true })
   cursor: string;
 }
