@@ -3,6 +3,7 @@ import {
   Inject,
   Injectable,
   UnauthorizedException,
+  NotFoundException,
   forwardRef,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -12,21 +13,22 @@ import {
   MyAccountWithoutNestedFields,
   UsersService,
 } from 'src/users/services/users.service';
-import { SendgridService } from './sendgrid.service';
 
 import { jwtPayload } from '../jwtPayload';
 import { MyAccount } from 'src/users/models/myAccount.model';
 
 import { User as GQLUser } from 'src/users/models/user.model';
 import { MessageResponse } from '../models/message-response.model';
+import { MailjetService } from './mailjet.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     @Inject(forwardRef(() => UsersService))
     private usersService: UsersService,
-    private sendgridService: SendgridService,
+    // private sendgridService: SendgridService,
     private readonly jwtService: JwtService,
+    private readonly mailjetService: MailjetService,
   ) {}
 
   async validateUser({
@@ -103,7 +105,7 @@ export class AuthService {
       sub: id,
     };
     const activateEmailToken = await this.jwtService.sign(activateEmailPayload);
-    await this.sendgridService.activateLink({
+    await this.mailjetService.sendActivateEmailLink({
       username,
       email,
       token: activateEmailToken,
@@ -171,7 +173,10 @@ export class AuthService {
       userId: user.id,
       newResetPasswordLink: token,
     });
-    await this.sendgridService.forgetPassword({
+    if (email == 'waiting for verification') {
+      throw new BadRequestException('email is still pending verification');
+    }
+    await this.mailjetService.sendForgetPasswordLink({
       username: payload.username,
       email: payload.email,
       token: token,

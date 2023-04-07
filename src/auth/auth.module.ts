@@ -3,13 +3,13 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
-import { SendgridService } from './services/sendgrid.service';
 import { AuthService } from './services/auth.service';
 
 import { AuthResolver } from './resolvers/auth.resolver';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 import { UsersModule } from 'src/users/users.module';
+import { MailjetService } from './services/mailjet.service';
 
 @Module({
   imports: [
@@ -25,7 +25,7 @@ import { UsersModule } from 'src/users/users.module';
       inject: [ConfigService],
     }),
   ],
-  providers: [AuthResolver, SendgridService, AuthService, JwtStrategy],
-  exports: [AuthService, SendgridService],
+  providers: [AuthResolver, MailjetService, AuthService, JwtStrategy],
+  exports: [AuthService],
 })
 export class AuthModule {}

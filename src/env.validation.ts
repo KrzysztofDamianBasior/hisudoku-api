@@ -25,10 +25,16 @@ export class EnvironmentVariables {
   MONGODB_URI: string;
 
   @IsString()
-  SEND_GRID_KEY: string;
+  MAILJET_PUBLIC_KEY: string;
 
   @IsString()
-  SENDER_EMAIL: string;
+  MAILJET_SECRET_KEY: string;
+
+  @IsString()
+  ACTIVATE_EMAIL_URL: string;
+
+  @IsString()
+  RESET_PASSWORD_URL: string;
 }
 
 export function validate(config: Record<string, unknown>) {
