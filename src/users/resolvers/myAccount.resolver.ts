@@ -40,7 +40,7 @@ export class MyAccountResolver {
     description: `
     A query retrieving user account information available only to the owner
         
-    only for logged in, no required roles
+    only for logged in, required roles: [User]
     Bearer authentication
 
     HTTP Headers:
@@ -63,7 +63,7 @@ export class MyAccountResolver {
     description: `
     Mutation available only to the account owner that modifies the username
             
-    only for logged in, no required roles
+    only for logged in, required roles: [User]
     Bearer authentication
 
     HTTP Headers:
@@ -88,7 +88,7 @@ export class MyAccountResolver {
     description: `
     A mutation available only to the account owner that starts the process of updating the e-mail address
 
-    only for logged in, no required roles
+    only for logged in, required roles: [User]
     Bearer authentication
 
     HTTP Headers:
@@ -113,7 +113,7 @@ export class MyAccountResolver {
     description: `
     A mutation available only to the account owner that updates the password
 
-    only for logged in, no required roles
+    only for logged in, required roles: [User]
     Bearer authentication
 
     HTTP Headers:
@@ -138,7 +138,7 @@ export class MyAccountResolver {
     description: `
     A mutation available only to the account owner that removes the account
     
-    only for logged in, no required roles
+    only for logged in, required roles: [User]
     Bearer authentication
 
     HTTP Headers:

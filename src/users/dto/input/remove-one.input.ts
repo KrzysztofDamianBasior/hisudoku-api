@@ -7,7 +7,7 @@ import { IsNotEmpty, IsString } from 'class-validator';
 })
 export class RemoveOneInput {
   @Field(() => ID, {
-    description: 'ID of the user whose account will be updated',
+    description: 'ID of the user whose account will be deleted',
   })
   @IsNotEmpty()
   @IsString()

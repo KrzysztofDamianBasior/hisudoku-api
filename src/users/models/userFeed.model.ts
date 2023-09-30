@@ -13,7 +13,7 @@ export class UserFeed {
 
   @Field(() => ID, {
     description:
-      'A constant pointer used to keep track of where in the data set the next items should be fetched from',
+      'A pointer used to keep track of where in the data set the next items should be fetched from',
     nullable: true,
   })
   cursor: string;

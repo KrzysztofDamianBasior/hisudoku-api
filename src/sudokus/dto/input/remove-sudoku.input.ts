@@ -1,9 +1,15 @@
-import { IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 import { InputType, Field, ID } from '@nestjs/graphql';
 
-@InputType()
+@InputType({
+  description:
+    'The parameters used by the sudokus resolver to remove one sudoku',
+})
 export class RemoveSudokuInput {
-  @Field(() => ID, { description: '' })
+  @Field(() => ID, {
+    description: 'ID of the sudoku that we request to be deleted',
+  })
   @IsString()
+  @IsNotEmpty()
   sudokuId: string;
 }

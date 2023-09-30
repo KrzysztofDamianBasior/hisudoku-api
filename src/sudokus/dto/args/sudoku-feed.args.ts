@@ -1,13 +1,21 @@
 import { ArgsType, Field, Int, ID } from '@nestjs/graphql';
-import { IsNumber, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 @ArgsType()
 export class SudokuFeedArgs {
-  @Field(() => ID, { nullable: true, description: '' })
+  @Field(() => ID, {
+    nullable: true,
+    description:
+      'A pointer used to keep track of where in the data set the next items should be fetched from',
+  })
   @IsString()
-  sudokuCursor: string;
+  @IsOptional()
+  sudokuCursor: string | null | undefined;
 
-  @Field(() => Int, { description: '' })
+  @Field(() => Int, {
+    description: 'The maximum number of items returned by the query',
+  })
   @IsNumber()
+  @IsNotEmpty()
   sudokusLimit: number;
 }

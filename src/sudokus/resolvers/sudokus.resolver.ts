@@ -35,14 +35,40 @@ export class SudokusResolver {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   // Queries
-  @Query(() => SudokuFeed, { name: 'sudokuFeed' })
+  @Query(() => SudokuFeed, {
+    name: 'sudokuFeed',
+    description: `
+    A query fetching a sudoku feed
+
+    only for logged in, no required roles
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+    `,
+  })
   async sudokuFeed(
     @Args() sudokuFeedArgs: SudokuFeedArgs,
   ): Promise<SudokuFeed> {
     return this.sudokusService.sudokuFeed(sudokuFeedArgs);
   }
 
-  @Query(() => Sudoku, { name: 'sudoku' })
+  @Query(() => Sudoku, {
+    name: 'sudoku',
+    description: `
+    A query retrieving information about one of the sudokus
+    
+    only for logged in, no required roles
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+    `,
+  })
   async findOne(@Args() findOneSudokuArgs: FindOneSudokuArgs): Promise<Sudoku> {
     return this.sudokusService.findOneSudoku(findOneSudokuArgs);
   }
@@ -51,7 +77,20 @@ export class SudokusResolver {
   // Mutations
   @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku, { name: 'createSudoku' })
+  @Mutation(() => Sudoku, {
+    name: 'createSudoku',
+    description: `
+    A mutation that create sudoku
+
+    only for logged in, required roles: [User]
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+  `,
+  })
   async createSudoku(
     @CurrentUser() user: GQLUser,
     @Args('createSudokusInput') createSudokuInput: CreateSudokuInput,
@@ -64,7 +103,20 @@ export class SudokusResolver {
 
   @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku, { name: 'updateSudoku' })
+  @Mutation(() => Sudoku, {
+    name: 'updateSudoku',
+    description: `
+      A mutation that update sudoku if the user is the author of the sudoku
+
+      only for logged in, required roles: [User]
+      Bearer authentication
+
+      HTTP Headers:
+      {
+        "Authorization": "Bearer your-JWT"
+      }
+    `,
+  })
   async updateSudoku(
     @CurrentUser() user: GQLUser,
     @Args('updateSudokuInput') updateSudokuInput: UpdateSudokuInput,
@@ -77,7 +129,20 @@ export class SudokusResolver {
 
   @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku, { name: 'removeSudoku' })
+  @Mutation(() => Sudoku, {
+    name: 'removeSudoku',
+    description: `
+    A mutation that remove sudoku if the user is the author of the sudoku
+
+    only for logged in, required roles: [User]
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+  `,
+  })
   async removeSudoku(
     @CurrentUser() user: GQLUser,
     @Args('removeSudokuInput') removeSudokuInput: RemoveSudokuInput,
@@ -87,7 +152,20 @@ export class SudokusResolver {
 
   @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku, { name: 'toggleFavoriteSudoku' })
+  @Mutation(() => Sudoku, {
+    name: 'toggleFavoriteSudoku',
+    description: `
+    A mutation that toggle sudoku like
+    
+    only for logged in, required roles: [User]
+    Bearer authentication
+
+    HTTP Headers:
+    {
+      "Authorization": "Bearer your-JWT"
+    }
+  `,
+  })
   async toggleFavorite(
     @CurrentUser() user: GQLUser,
     @Args('toggleFavoriteSudokuInput')
@@ -101,12 +179,16 @@ export class SudokusResolver {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   // Nested Queries
-  @ResolveField('author', () => GQLUser)
+  @ResolveField('author', () => GQLUser, {
+    description: 'Sudoku author',
+  })
   async author(@Parent() sudoku: Sudoku): Promise<GQLUser> {
     return this.sudokusService.findSudokuAuthor({ sudokuId: sudoku.id });
   }
 
-  @ResolveField('favoritedBy', () => UserFeed)
+  @ResolveField('favoritedBy', () => UserFeed, {
+    description: 'A list of users who liked the sudoku',
+  })
   async favoritedBy(
     @Parent() sudoku: Sudoku,
     @Args() findSudokuFavoritedBy: FindSudokuFavoritedByArgs,

@@ -6,7 +6,7 @@ export class SudokuFeedArgs {
   @Field(() => ID, {
     nullable: true,
     description:
-      'A constant pointer used to keep track of where in the data set the next items should be fetched from',
+      'A pointer used to keep track of where in the data set the next items should be fetched from',
   })
   @IsString()
   @IsOptional()
