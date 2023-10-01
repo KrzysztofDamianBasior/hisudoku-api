@@ -34,40 +34,54 @@ type UserFeed {
   hasNextPage: Boolean!
 
   """
-  A constant pointer used to keep track of where in the data set the next items should be fetched from
+  A pointer used to keep track of where in the data set the next items should be fetched from
   """
   cursor: ID
 }
 
+"""The sudoku entity information"""
 type Sudoku {
-  """Sudoku identifier"""
+  """The sudoku identifier"""
   id: ID!
 
-  """"""
+  """The sudoku creation date"""
   createdAt: DateTime!
 
-  """"""
+  """A date of the last update of the sudoku content"""
   updatedAt: DateTime!
 
-  """"""
+  """Author of the sudoku"""
   author: User!
 
-  """"""
+  """The sudoku content"""
   content: String!
 
-  """"""
+  """Number of likes accumulated by sudoku"""
   favoriteCount: Int!
-  favoritedBy(userCursor: ID, usersLimit: Int!): UserFeed!
+
+  """Users who liked this sudoku"""
+  favoritedBy(
+    """
+    A pointer used to keep track of where in the data set the next items should be fetched from
+    """
+    userCursor: ID
+
+    """The maximum number of items returned by the query"""
+    usersLimit: Int!
+  ): UserFeed!
 }
 
+"""A sudoku feed structure"""
 type SudokuFeed {
-  """"""
+  """Sudokus list"""
   sudokus: [Sudoku!]!
 
-  """"""
+  """An indicator of whether there is more data to retrieve"""
   hasNextPage: Boolean!
 
-  """"""
+  """
+  A pointer used to keep track of where in the data set the next items should be fetched from
+  """
   cursor: String
 }
 
@@ -79,7 +93,7 @@ type MyAccount {
   """The sudokus created by the owner of the account"""
   createdSudokus(
     """
-    A constant pointer used to keep track of where in the data set the next items should be fetched from
+    A pointer used to keep track of where in the data set the next items should be fetched from
     """
     sudokuCursor: ID
 
@@ -125,7 +139,7 @@ type Query {
   "\n    A query fetching an user feed\n \n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
   userFeed(
     """
-    A constant pointer used to keep track of where in the data set the next items should be fetched from
+    A pointer used to keep track of where in the data set the next items should be fetched from
     """
     userCursor: ID
 
@@ -133,10 +147,25 @@ type Query {
     usersLimit: Int!
   ): UserFeed!
 
-  "\n    A query retrieving user account information available only to the owner\n        \n    only for logged in, no required roles\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
+  "\n    A query retrieving user account information available only to the owner\n        \n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
   myAccount: MyAccount!
-  sudokuFeed(sudokuCursor: ID, sudokusLimit: Int!): SudokuFeed!
-  sudoku(sudokuId: ID!): Sudoku!
+
+  "\n    A query fetching a sudoku feed\n\n    only for logged in, no required roles\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
+  sudokuFeed(
+    """
+    A pointer used to keep track of where in the data set the next items should be fetched from
+    """
+    sudokuCursor: ID
+
+    """The maximum number of items returned by the query"""
+    sudokusLimit: Int!
+  ): SudokuFeed!
+
+  "\n    A query retrieving information about one of the sudokus\n    \n    only for logged in, no required roles\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
+  sudoku(
+    """The ID of the searched sudoku"""
+    sudokuId: ID!
+  ): Sudoku!
 }
 
 type Mutation {
@@ -149,16 +178,16 @@ type Mutation {
   "\n    A mutation that grants an user administrator privileges\n    \n    only for logged in, required roles: [Admin]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
   grantAdminPermissions(grantAdminPermissionsInput: GrantAdminPermissionsInput!): User!
 
-  "\n    Mutation available only to the account owner that modifies the username\n            \n    only for logged in, no required roles\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
+  "\n    Mutation available only to the account owner that modifies the username\n            \n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
   updateMyUsername(updateMyUsernameInput: UpdateMyUsernameInput!): MyAccount!
 
-  "\n    A mutation available only to the account owner that starts the process of updating the e-mail address\n\n    only for logged in, no required roles\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
+  "\n    A mutation available only to the account owner that starts the process of updating the e-mail address\n\n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
   updateMyEmail(updateMyEmailInput: UpdateMyEmailInput!): MyAccount!
 
-  "\n    A mutation available only to the account owner that updates the password\n\n    only for logged in, no required roles\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
+  "\n    A mutation available only to the account owner that updates the password\n\n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
   updateMyPassword(updateMyPasswordInput: UpdateMyPasswordInput!): MyAccount!
 
-  "\n    A mutation available only to the account owner that removes the account\n    \n    only for logged in, no required roles\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
+  "\n    A mutation available only to the account owner that removes the account\n    \n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n    "
   removeMyAccount: MyAccount!
 
   "\n    A mutation that allows the user to create an account\n    \n    no authentication required, no required roles, no extra http headers\n    "
@@ -175,9 +204,17 @@ type Mutation {
 
   "\n    A mutation that resets the user's password\n    \n    no authentication required, no required roles, no extra http headers\n    "
   resetPassword(resetPasswordInput: ResetPasswordInput!): AuthResponse!
+
+  "\n    A mutation that create sudoku\n\n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n  "
   createSudoku(createSudokusInput: CreateSudokuInput!): Sudoku!
+
+  "\n      A mutation that update sudoku if the user is the author of the sudoku\n\n      only for logged in, required roles: [User]\n      Bearer authentication\n\n      HTTP Headers:\n      {\n        \"Authorization\": \"Bearer your-JWT\"\n      }\n    "
   updateSudoku(updateSudokuInput: UpdateSudokuInput!): Sudoku!
+
+  "\n    A mutation that remove sudoku if the user is the author of the sudoku\n\n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n  "
   removeSudoku(removeSudokuInput: RemoveSudokuInput!): Sudoku!
+
+  "\n    A mutation that toggle sudoku like\n    \n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n  "
   toggleFavoriteSudoku(toggleFavoriteSudokuInput: ToggleFavoriteSudokuInput!): Sudoku!
 }
 
@@ -194,7 +231,7 @@ input UpdateOneUsernameInput {
 
 """The parameters used by the users resolver to remove one user account"""
 input RemoveOneInput {
-  """ID of the user whose account will be updated"""
+  """ID of the user whose account will be deleted"""
   userId: ID!
 }
 
@@ -282,22 +319,31 @@ input ResetPasswordInput {
   newPassword: String!
 }
 
+"""The parameters used by the sudokus resolver to create the sudoku"""
 input CreateSudokuInput {
-  """"""
+  """content of the sudoku that user request to create"""
   content: String!
 }
 
+"""
+The parameters used by the sudokus resolver to update the sudoku content
+"""
 input UpdateSudokuInput {
+  """ID of the sudoku whose content will be updated"""
   sudokuId: ID!
+
+  """A new content"""
   sudokuContent: String!
 }
 
+"""The parameters used by the sudokus resolver to remove one sudoku"""
 input RemoveSudokuInput {
-  """"""
+  """ID of the sudoku that we request to be deleted"""
   sudokuId: ID!
 }
 
+"""The parameters used by the sudokus resolver to toggle the sudoku like"""
 input ToggleFavoriteSudokuInput {
-  """"""
+  """ID of the sudoku that the user toggle like"""
   sudokuId: ID!
 }

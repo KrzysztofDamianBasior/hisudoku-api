@@ -2,7 +2,8 @@
 
 A system for publishing and managing sudoku puzzles using the nest framework and node runtime.
 ## Features
-* API compatible with the GRAPHQl architecture
+
+* API compatible with the graphql architecture
 * Documented mutations and queries
 * Role-based access controll
 * User registration and login with JWT authentication
