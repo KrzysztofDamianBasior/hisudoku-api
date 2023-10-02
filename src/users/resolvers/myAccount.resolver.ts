@@ -21,7 +21,7 @@ import { UpdateMyPasswordInput } from '../dto/input/update-my-password.input';
 
 import { CurrentUser } from 'src/auth/current-user.decorator';
 import { GqlAuthGuard } from 'src/auth/guards/gql-auth.guard';
-import { jwtPayload } from 'src/auth/jwtPayload';
+import { AccessTokenPayload } from 'src/auth/accessTokenPayload';
 import { SudokuFeedArgs } from '../dto/args/sudoku-feed.args';
 
 import { Logger } from '@nestjs/common';
@@ -50,7 +50,7 @@ export class MyAccountResolver {
     `,
   })
   async findMe(
-    @CurrentUser() user: jwtPayload,
+    @CurrentUser() user: AccessTokenPayload,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
     return this.usersService.findMyAccountById({ userId: user.sub });
   }
@@ -73,7 +73,7 @@ export class MyAccountResolver {
     `,
   })
   async updateMyUsername(
-    @CurrentUser() user: jwtPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Args('updateMyUsernameInput') updateMyUsernameInput: UpdateMyUsernameInput,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
     return this.usersService.updateMyUsername({
@@ -98,7 +98,7 @@ export class MyAccountResolver {
     `,
   })
   async updateMyEmail(
-    @CurrentUser() user: jwtPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Args('updateMyEmailInput') updateMyEmailInput: UpdateMyEmailInput,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
     return this.usersService.updateMyEmail({
@@ -123,7 +123,7 @@ export class MyAccountResolver {
     `,
   })
   async updateMyPassword(
-    @CurrentUser() user: jwtPayload,
+    @CurrentUser() user: AccessTokenPayload,
     @Args('updateMyPasswordInput') updateMyPasswordInput: UpdateMyPasswordInput,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
     return this.usersService.updateMyPassword({
@@ -148,7 +148,7 @@ export class MyAccountResolver {
     `,
   })
   async removeMyAccount(
-    @CurrentUser() user: jwtPayload,
+    @CurrentUser() user: AccessTokenPayload,
   ): Promise<Omit<MyAccount, 'createdSudokus'>> {
     return this.usersService.removeMyAccountById({ userId: user.sub });
   }
