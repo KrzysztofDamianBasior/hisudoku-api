@@ -85,14 +85,20 @@ export class SudokusService {
   }: {
     userId: string;
     removeSudokuInput: RemoveSudokuInput;
-  }): Promise<Sudoku> {
+  }): Promise<string> {
     await this.verifySudokuAuthor({
       userId,
       sudokuId: removeSudokuInput.sudokuId,
     });
-    return this.sudokusRepository.remove({
-      sudokuId: removeSudokuInput.sudokuId,
-    });
+    if (
+      this.sudokusRepository.remove({
+        sudokuId: removeSudokuInput.sudokuId,
+      })
+    ) {
+      return 'removed successfully';
+    } else {
+      return 'failed to remove entity';
+    }
   }
 
   async toggleFavorite({

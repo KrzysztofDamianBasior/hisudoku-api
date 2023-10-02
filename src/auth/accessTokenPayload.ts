@@ -1,4 +1,4 @@
-export type jwtPayload = {
+export type AccessTokenPayload = {
   name: string;
   sub: string;
   iss: string;

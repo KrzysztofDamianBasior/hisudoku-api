@@ -14,7 +14,7 @@ import {
   UsersService,
 } from 'src/users/services/users.service';
 
-import { jwtPayload } from '../jwtPayload';
+import { AccessTokenPayload } from '../accessTokenPayload';
 import { MyAccount } from 'src/users/models/myAccount.model';
 
 import { User as GQLUser } from 'src/users/models/user.model';
@@ -80,7 +80,7 @@ export class AuthService {
         email,
         roles: ['User'],
       });
-    const payload: jwtPayload = {
+    const payload: AccessTokenPayload = {
       name: user.username,
       sub: user.id,
       iss: 'HiSudoku',
@@ -133,10 +133,11 @@ export class AuthService {
     sub: string;
     roles: string[];
   }): Promise<{ access_token: string }> {
-    const payload = {
-      username,
+    const payload: AccessTokenPayload = {
+      name: username,
       sub,
       roles,
+      iss: 'HiSudoku',
     };
     return {
       access_token: this.jwtService.sign(payload),

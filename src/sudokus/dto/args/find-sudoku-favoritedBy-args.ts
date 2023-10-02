@@ -8,7 +8,6 @@ export class FindSudokuFavoritedByArgs {
     description:
       'A pointer used to keep track of where in the data set the next items should be fetched from',
   })
-  @IsString()
   userCursor: string;
 
   @Field(() => Int, {

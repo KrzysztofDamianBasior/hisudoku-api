@@ -27,6 +27,7 @@ import { Sudoku } from '../models/sudoku.model';
 import { SudokuFeed } from '../models/sudokuFeed.model';
 import { User as GQLUser } from 'src/users/models/user.model';
 import { UserFeed } from 'src/users/models/userFeed.model';
+import { AccessTokenPayload } from 'src/auth/accessTokenPayload';
 
 @Roles('User')
 @Resolver(() => Sudoku)
@@ -75,8 +76,8 @@ export class SudokusResolver {
 
   ////////////////////////////////////////////////////////////////////////////////////////////
   // Mutations
-  @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => Sudoku, {
     name: 'createSudoku',
     description: `
@@ -92,17 +93,17 @@ export class SudokusResolver {
   `,
   })
   async createSudoku(
-    @CurrentUser() user: GQLUser,
+    @CurrentUser() user: AccessTokenPayload,
     @Args('createSudokusInput') createSudokuInput: CreateSudokuInput,
   ): Promise<Sudoku> {
     return this.sudokusService.createSudoku({
-      authorId: user.id,
+      authorId: user.sub,
       createSudokuInput,
     });
   }
 
-  @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => Sudoku, {
     name: 'updateSudoku',
     description: `
@@ -118,18 +119,18 @@ export class SudokusResolver {
     `,
   })
   async updateSudoku(
-    @CurrentUser() user: GQLUser,
+    @CurrentUser() user: AccessTokenPayload,
     @Args('updateSudokuInput') updateSudokuInput: UpdateSudokuInput,
   ): Promise<Sudoku> {
     return this.sudokusService.updateSudokuContent({
-      userId: user.id,
+      userId: user.sub,
       updateSudokuInput,
     });
   }
 
-  @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
-  @Mutation(() => Sudoku, {
+  @UseGuards(GqlAuthGuard)
+  @Mutation(() => String, {
     name: 'removeSudoku',
     description: `
     A mutation that remove sudoku if the user is the author of the sudoku
@@ -144,14 +145,14 @@ export class SudokusResolver {
   `,
   })
   async removeSudoku(
-    @CurrentUser() user: GQLUser,
+    @CurrentUser() user: AccessTokenPayload,
     @Args('removeSudokuInput') removeSudokuInput: RemoveSudokuInput,
-  ): Promise<Sudoku> {
-    return this.sudokusService.remove({ userId: user.id, removeSudokuInput });
+  ): Promise<string> {
+    return this.sudokusService.remove({ userId: user.sub, removeSudokuInput });
   }
 
-  @UseGuards(GqlAuthGuard)
   @UseGuards(RolesGuard)
+  @UseGuards(GqlAuthGuard)
   @Mutation(() => Sudoku, {
     name: 'toggleFavoriteSudoku',
     description: `
@@ -167,12 +168,12 @@ export class SudokusResolver {
   `,
   })
   async toggleFavorite(
-    @CurrentUser() user: GQLUser,
+    @CurrentUser() user: AccessTokenPayload,
     @Args('toggleFavoriteSudokuInput')
     toggleFavoriteSudokuInput: ToggleFavoriteSudokuInput,
   ) {
     return this.sudokusService.toggleFavorite({
-      userId: user.id,
+      userId: user.sub,
       toggleFavoriteSudokuInput,
     });
   }
