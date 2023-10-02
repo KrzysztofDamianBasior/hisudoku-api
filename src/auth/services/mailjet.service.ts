@@ -384,7 +384,7 @@ export class MailjetService {
                                                               href="${this.configService.get(
                                                                 'ACTIVATE_EMAIL_URL',
                                                               )}/${token}"
-                                                               target="_blank" style="color: #ffffff; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: block; font-weight: normal; white-space: nowrap; background-color: #0d6efd; padding: 8px 12px; border: 1px solid #0d6efd;">Reset Your Password</a>
+                                                               target="_blank" style="color: #ffffff; font-size: 16px; font-family: Helvetica, Arial, sans-serif; text-decoration: none; border-radius: 6px; line-height: 20px; display: block; font-weight: normal; white-space: nowrap; background-color: #0d6efd; padding: 8px 12px; border: 1px solid #0d6efd;">Activate Your Email</a>
                                                             </td>
                                                           </tr>
                                                         </tbody>
