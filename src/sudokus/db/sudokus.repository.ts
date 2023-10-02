@@ -42,7 +42,7 @@ export class SudokusRepository {
     // const author = await this.usersRepository.findOneById(authorId);
     const gQLsudoku: GQLSudoku = {
       author: dBSudoku.author,
-      id: dBSudoku.id,
+      id: dBSudoku._id.toString(),
       createdAt: dBSudoku.createdAt,
       updatedAt: dBSudoku.updatedAt,
       content,
@@ -57,7 +57,18 @@ export class SudokusRepository {
   }: {
     sudokuId: string | Types.ObjectId;
   }): Promise<GQLSudoku> {
-    return this.sudokuModel.findOneAndDelete({ sudokuId });
+    const dBSudoku = await this.sudokuModel.findOneAndDelete({ sudokuId });
+    console.log(dBSudoku);
+    const gQLsudoku: GQLSudoku = {
+      author: dBSudoku.author,
+      id: dBSudoku._id.toString(),
+      createdAt: dBSudoku.createdAt,
+      updatedAt: dBSudoku.updatedAt,
+      content: dBSudoku.content,
+      favoriteCount: dBSudoku.favoriteCount,
+      favoritedBy: dBSudoku.favoritedBy,
+    };
+    return gQLsudoku;
   }
 
   async find({
@@ -80,7 +91,7 @@ export class SudokusRepository {
 
       gQLSudokus.push({
         author: sudoku.author,
-        id: sudoku.id,
+        id: sudoku._id.toString(),
         createdAt: sudoku.createdAt,
         updatedAt: sudoku.updatedAt,
         content: sudoku.content,
@@ -132,7 +143,7 @@ export class SudokusRepository {
         // });
         gQLSudokus.push({
           author: sudoku.author,
-          id: sudoku.id,
+          id: sudoku._id.toString(),
           createdAt: sudoku.createdAt,
           updatedAt: sudoku.updatedAt,
           content: sudoku.content,
@@ -185,7 +196,7 @@ export class SudokusRepository {
         // });
         gQLSudokus.push({
           author: sudoku.author,
-          id: sudoku.id,
+          id: sudoku._id.toString(),
           createdAt: sudoku.createdAt,
           updatedAt: sudoku.updatedAt,
           content: sudoku.content,
@@ -215,7 +226,7 @@ export class SudokusRepository {
     // });
     const gQLsudoku: GQLSudoku = {
       author: dBSudoku.author,
-      id: dBSudoku.id,
+      id: dBSudoku._id.toString(),
       createdAt: dBSudoku.createdAt,
       updatedAt: dBSudoku.updatedAt,
       content: dBSudoku.content,
@@ -310,7 +321,7 @@ export class SudokusRepository {
     //   limit: favoritedByLimit,
     // });
     const gQLSudoku: GQLSudoku = {
-      id: dBSudoku.id,
+      id: dBSudoku._id.toString(),
       author: dBSudoku.author,
       content: dBSudoku.content,
       createdAt: dBSudoku.createdAt,
@@ -344,6 +355,9 @@ export class SudokusRepository {
     sudokuId: string;
   }): Promise<GQLUser> {
     const sudoku = await this.sudokuModel.findById(sudokuId);
+    if (sudoku == null) {
+      throw new NotFoundException();
+    }
     const user = await this.usersRepository.findOnePublicDetailsById({
       userId: sudoku.author,
     });
