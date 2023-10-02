@@ -212,7 +212,7 @@ type Mutation {
   updateSudoku(updateSudokuInput: UpdateSudokuInput!): Sudoku!
 
   "\n    A mutation that remove sudoku if the user is the author of the sudoku\n\n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n  "
-  removeSudoku(removeSudokuInput: RemoveSudokuInput!): Sudoku!
+  removeSudoku(removeSudokuInput: RemoveSudokuInput!): String!
 
   "\n    A mutation that toggle sudoku like\n    \n    only for logged in, required roles: [User]\n    Bearer authentication\n\n    HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n  "
   toggleFavoriteSudoku(toggleFavoriteSudokuInput: ToggleFavoriteSudokuInput!): Sudoku!

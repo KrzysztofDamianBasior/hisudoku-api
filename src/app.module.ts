@@ -10,6 +10,7 @@ import { validate } from './env.validation';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { SudokusModule } from './sudokus/sudokus.module';
+import { ComplexityPlugin } from './complexity.plugin';
 
 @Module({
   imports: [
@@ -32,5 +33,6 @@ import { SudokusModule } from './sudokus/sudokus.module';
     AuthModule,
     SudokusModule,
   ],
+  providers: [ComplexityPlugin],
 })
 export class AppModule {}
