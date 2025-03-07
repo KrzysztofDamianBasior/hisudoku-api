@@ -1,13 +1,13 @@
-package org.hisudoku.hisudokuapi.HiSudokuApi;
+package org.hisudoku.hisudokuapi;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class HiSudokuApiApplication {
+public class HisudokuapiApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(HiSudokuApiApplication.class, args);
+		SpringApplication.run(HisudokuapiApplication.class, args);
 	}
 
 }
