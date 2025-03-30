@@ -5,9 +5,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class HisudokuapiApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(HisudokuapiApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        try {
+            SpringApplication.run(HisudokuapiApplication.class, args);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

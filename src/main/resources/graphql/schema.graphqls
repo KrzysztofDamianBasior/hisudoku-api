@@ -1,475 +1,471 @@
 """
 The user account information
 """
-type User {
-  """
-  The user identifier
-  """
-  id: ID!
+type UserModel {
+    """
+    The user identifier
+    """
+    id: ID!
 
-  """
-  The user account creation date
-  """
-  enrollmentDate: DateTime!
+    """
+    The user account creation date
+    """
+    enrollmentDate: LocalDateTime!
 
-  """
-  A date of the last update of the user account
-  """
-  updatedAt: DateTime!
+    """
+    A date of the last update of the user account
+    """
+    updatedAt: LocalDateTime!
 
-  """
-  The username
-  """
-  username: String!
+    """
+    The username
+    """
+    name: String!
 
-  """
-  The role assigned to the user
-  """
-  roles: String!
+    """
+    The role assigned to the user
+    """
+    role: String!
 }
 
+#enum CardType {
+#    TYPE_1
+#    TYPE_2
+#}
+
+#input OrderFilter {
+#    cardType: CardType
+#}
+
 """
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+Custom scalar for handling LocalDateTime in format 'yyyy-MM-dd HH:mm'
 """
-scalar DateTime
+scalar LocalDateTime
+
+"""
+Custom scalar for handling LocalDate in format 'yyyy-MM-dd'
+"""
+scalar LocalDate
 
 """
 An user feed structure
 """
-type UserFeed {
-  """
-  An user list
-  """
-  users: [User!]!
+type UserFeedModel {
+    """
+    An user list
+    """
+    users: [UserModel!]!
 
-  """
-  An indicator of whether there is more data to retrieve
-  """
-  hasNextPage: Boolean!
+    """
+    An indicator of whether there is more data to retrieve
+    """
+    hasNextPage: Boolean!
 
-  """
-  A pointer used to keep track of where in the data set the next items should be fetched from
-  """
-  cursor: ID
-}
-
-"""
-The sudoku entity information
-"""
-type Sudoku {
-  """
-  The sudoku identifier
-  """
-  id: ID!
-
-  """
-  The sudoku creation date
-  """
-  createdAt: DateTime!
-
-  """
-  A date of the last update of the sudoku content
-  """
-  updatedAt: DateTime!
-
-  """
-  Author of the sudoku
-  """
-  author: User!
-
-  """
-  The sudoku content
-  """
-  content: String!
-
-  """
-  Number of likes accumulated by sudoku
-  """
-  favoriteCount: Int!
-
-  """
-  Users who liked this sudoku
-  """
-  favoritedBy(
     """
     A pointer used to keep track of where in the data set the next items should be fetched from
     """
-    userCursor: ID
+    cursor: ID
+}
+
+"""
+The sudoku model
+"""
+type SudokuModel {
+    """
+    The sudoku identifier
+    """
+    id: ID!
 
     """
-    The maximum number of items returned by the query
+    The sudoku creation date
     """
-    usersLimit: Int!
-  ): UserFeed!
+    createdAt: LocalDateTime!
+
+    """
+    A date of the last update of the sudoku content
+    """
+    updatedAt: LocalDateTime!
+
+    """
+    Author of the sudoku
+    """
+    author: UserModel!
+
+    """
+    The sudoku content
+    """
+    content: String!
+
+    """
+    Number of likes accumulated by sudoku
+    """
+    favouriteCount: Int!
+
+    """
+    Users who liked this sudoku
+    """
+    favouritedBy(
+        """
+        A pointer used to keep track of where in the data set the next items should be fetched from
+        """
+        userCursor: ID
+
+        """
+        The maximum number of items returned by the query
+        """
+        usersLimit: Int!
+    ): UserFeedModel!
 }
 
 """
 A sudoku feed structure
 """
-type SudokuFeed {
-  """
-  Sudokus list
-  """
-  sudokus: [Sudoku!]!
+type SudokuFeedModel {
+    """
+    Sudokus list
+    """
+    sudokus: [SudokuModel!]!
 
-  """
-  An indicator of whether there is more data to retrieve
-  """
-  hasNextPage: Boolean!
+    """
+    An indicator of whether there is more data to retrieve
+    """
+    hasNextPage: Boolean!
 
-  """
-  A pointer used to keep track of where in the data set the next items should be fetched from
-  """
-  cursor: String
+    """
+    A pointer used to keep track of where in the data set the next items should be fetched from
+    """
+    cursor: String
 }
 
 """
 The information available only to the account owner
 """
-type MyAccount {
-  """
-  The account owner identifier
-  """
-  id: ID!
-
-  """
-  The sudokus created by the owner of the account
-  """
-  createdSudokus(
+type AccountModel {
     """
-    A pointer used to keep track of where in the data set the next items should be fetched from
+    The account owner identifier
     """
-    sudokuCursor: ID
+    id: ID!
 
     """
-    The maximum number of items returned by the query
+    The sudokus created by the owner of the account
     """
-    sudokusLimit: Int!
-  ): SudokuFeed!
+    createdSudokus(
+        """
+        A pointer used to keep track of where in the data set the next items should be fetched from
+        """
+        sudokuCursor: ID
 
-  """
-  The account creation date
-  """
-  enrollmentDate: DateTime!
+        """
+        The maximum number of items returned by the query
+        """
+        sudokusLimit: Int!
+    ): SudokuFeedModel!
 
-  """
-  A date of the last update of the account
-  """
-  updatedAt: DateTime!
+    """
+    The account creation date
+    """
+    enrollmentDate: LocalDateTime!
 
-  """
-  The username
-  """
-  username: String!
+    """
+    A date of the last update of the account
+    """
+    updatedAt: LocalDateTime!
 
-  """
-  The account owner's e-mail address
-  """
-  email: String
+    """
+    The username
+    """
+    name: String!
 
-  """
-  The roles assigned to the user
-  """
-  roles: [String!]!
+    """
+    The account owner's e-mail address
+    """
+    email: String
+
+    """
+    The role assigned to the user
+    """
+    role: String!
 }
 
 """
 A response returned in the authentication process.
 """
 type AuthResponse {
-  """
-  The user authentication token.
-  """
-  access_token: String!
+    """
+    The user authentication token.
+    """
+    accessToken: String!
 }
 
 """
 A structure with information or instructions
 """
 type MessageResponse {
-  """
-  A message with process status information
-  """
-  message: String!
+    """
+    A message with process status information
+    """
+    message: String!
 }
 
 type Query {
-  "A query retrieving information about one of the users\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  user(
-    """
-    The account ID of the searched user
-    """
-    userId: ID!
-  ): User!
+    "A query retrieving information about one of the users\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    user(
+        """
+        The account ID of the searched user
+        """
+        userId: ID!
+    ): UserModel!
 
-  "A query fetching an user feed\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  userFeed(
-    """
-    A pointer used to keep track of where in the data set the next items should be fetched from
-    """
-    userCursor: ID
+    "A query fetching an user feed\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    userFeed(
+        """
+        A pointer used to keep track of where in the data set the next items should be fetched from
+        """
+        userCursor: ID
 
-    """
-    The maximum number of items returned by the query
-    """
-    usersLimit: Int!
-  ): UserFeed!
+        """
+        The maximum number of items returned by the query
+        """
+        usersLimit: Int!
+    ): UserFeedModel!
 
-  "A query retrieving user account information available only to the owner\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  myAccount: MyAccount!
+    "A query retrieving user account information available only to the owner\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    myAccount: AccountModel!
 
-  "A query fetching a sudoku feed\n only for logged in, no required roles\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  sudokuFeed(
-    """
-    A pointer used to keep track of where in the data set the next items should be fetched from
-    """
-    sudokuCursor: ID
+    "A query fetching a sudoku feed\n only for logged in, no required roles\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    sudokuFeed(
+        """
+        A pointer used to keep track of where in the data set the next items should be fetched from
+        """
+        sudokuCursor: ID
 
-    """
-    The maximum number of items returned by the query
-    """
-    sudokusLimit: Int!
-  ): SudokuFeed!
+        """
+        The maximum number of items returned by the query
+        """
+        sudokusLimit: Int!
+    ): SudokuFeedModel!
 
-  "A query retrieving information about one of the sudokus\n only for logged in, no required roles\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  sudoku(
-    """
-    The ID of the searched sudoku
-    """
-    sudokuId: ID!
-  ): Sudoku!
+    "A query retrieving information about one of the sudokus\n only for logged in, no required roles\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    sudoku(
+        """
+        The ID of the searched sudoku
+        """
+        sudokuId: ID!
+    ): SudokuModel!
 }
 
 type Mutation {
-  "A mutation that changes the username of the selected user\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  updateOneUserUsername(updateOneUserUsername: UpdateOneUsernameInput!): User!
+    "A mutation that changes the username of the selected user\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    updateOneUsername(updateOneUsernameInput: UpdateOneUsernameInput!): UserModel!
 
-  "A mutation that removes one of the users\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  removeOneUser(removeOneUserInput: RemoveOneInput!): User!
+    "A mutation that removes one of the users\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    removeOneUser(removeOneInput: RemoveOneInput!): UserModel!
 
-  "A mutation that grants an user administrator privileges\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  grantAdminPermissions(
-    grantAdminPermissionsInput: GrantAdminPermissionsInput!
-  ): User!
+    "A mutation that grants an user administrator privileges\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    grantAdminPermissions(
+        grantAdminPermissionsInput: GrantAdminPermissionsInput!
+    ): UserModel!
 
-  "Mutation available only to the account owner that modifies the username\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  updateMyUsername(updateMyUsernameInput: UpdateMyUsernameInput!): MyAccount!
+    "Mutation available only to the account owner that modifies the username\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    updateMyUsername(updateMyUsernameInput: UpdateMyUsernameInput!): AccountModel!
 
-  "A mutation available only to the account owner that starts the process of updating the e-mail address\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  updateMyEmail(updateMyEmailInput: UpdateMyEmailInput!): MyAccount!
+    "A mutation available only to the account owner that starts the process of updating the e-mail address\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    updateMyEmail(updateMyEmailInput: UpdateMyEmailInput!): AccountModel!
 
-  "A mutation available only to the account owner that updates the password\n only for logged in, required roles: [User]\n    Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  updateMyPassword(updateMyPasswordInput: UpdateMyPasswordInput!): MyAccount!
+    "A mutation available only to the account owner that updates the password\n only for logged in, required roles: [User]\n    Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    updateMyPassword(updateMyPasswordInput: UpdateMyPasswordInput!): AccountModel!
 
-  "A mutation available only to the account owner that removes the account\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  removeMyAccount: MyAccount!
+    "A mutation that activates the user's email\n no authentication required, no required roles, no extra http headers\n"
+    activateEmail(activateEmailInput: ActivateEmailInput!): AccountModel!
 
-  "A mutation that allows the user to create an account\n no authentication required, no required roles, no extra http headers\n"
-  singUp(signUpInput: SignUpInput!): AuthResponse!
+    "A mutation available only to the account owner that removes the account\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    removeMyAccount: AccountModel!
 
-  "A mutation that allows the user to authenticate himself\n no authentication required, no required roles, no extra http headers\n"
-  singIn(signInInput: SignInInput!): AuthResponse!
+    "A mutation that allows the user to create an account\n no authentication required, no required roles, no extra http headers\n"
+    singUp(signUpInput: SignUpInput!): AuthResponse!
 
-  "A mutation that activates the user's email\n no authentication required, no required roles, no extra http headers\n"
-  activateEmail(activateEmailInput: ActivateEmailInput!): MyAccount!
+    "A mutation that allows the user to authenticate himself\n no authentication required, no required roles, no extra http headers\n"
+    singIn(signInInput: SignInInput!): AuthResponse!
 
-  "A mutation that starts the user's password recovery procedure\n no authentication required, no required roles, no extra http headers\n"
-  forgotPassword(forgotPasswordInput: ForgotPasswordInput!): MessageResponse!
+    "A mutation that starts the user's password recovery procedure\n no authentication required, no required roles, no extra http headers\n"
+    forgotPassword(forgotPasswordInput: ForgotPasswordInput!): MessageResponse!
 
-  "A mutation that resets the user's password\n no authentication required, no required roles, no extra http headers\n"
-  resetPassword(resetPasswordInput: ResetPasswordInput!): AuthResponse!
+    "A mutation that create sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    createSudoku(addSudokuInput: AddSudokuInput!): SudokuModel!
 
-  "A mutation that create sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  createSudoku(createSudokusInput: CreateSudokuInput!): Sudoku!
+    "A mutation that update sudoku if the user is the author of the sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n      {\n        \"Authorization\": \"Bearer your-JWT\"\n      }\n"
+    updateSudoku(updateSudokuInput: UpdateSudokuInput!): SudokuModel!
 
-  "A mutation that update sudoku if the user is the author of the sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n      {\n        \"Authorization\": \"Bearer your-JWT\"\n      }\n"
-  updateSudoku(updateSudokuInput: UpdateSudokuInput!): Sudoku!
+    "A mutation that remove sudoku if the user is the author of the sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    removeSudoku(removeSudokuInput: RemoveSudokuInput!): SudokuModel!
 
-  "A mutation that remove sudoku if the user is the author of the sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  removeSudoku(removeSudokuInput: RemoveSudokuInput!): String!
-
-  "A mutation that toggle sudoku like\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-  toggleFavoriteSudoku(
-    toggleFavoriteSudokuInput: ToggleFavoriteSudokuInput!
-  ): Sudoku!
+    "A mutation that toggle sudoku like\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    toggleFavoriteSudoku(
+        toggleFavouriteSudokuInput: ToggleFavouriteSudokuInput!
+    ): SudokuModel!
 }
 
 """
 The parameters used by the users resolver to update the username for one of the accounts
 """
 input UpdateOneUsernameInput {
-  """
-  ID of the user whose account will be updated
-  """
-  userId: ID!
+    """
+    ID of the user whose account will be updated
+    """
+    userId: ID!
 
-  """
-  A new username
-  """
-  newUsername: String!
+    """
+    A new username
+    """
+    newUsername: String!
 }
 
 """
 The parameters used by the users resolver to remove one user account
 """
 input RemoveOneInput {
-  """
-  ID of the user whose account will be deleted
-  """
-  userId: ID!
+    """
+    ID of the user whose account will be deleted
+    """
+    userId: ID!
 }
 
 """
 The parameters used by the users resolver to grant the user administrator privileges
 """
 input GrantAdminPermissionsInput {
-  """
-  ID of the user whose account will be updated
-  """
-  userId: ID!
+    """
+    ID of the user whose account will be updated
+    """
+    userId: ID!
 }
 
 """
 The parameters used by the account owner to update the username
 """
 input UpdateMyUsernameInput {
-  """
-  A new username
-  """
-  newUsername: String!
+    """
+    A new username
+    """
+    newUsername: String!
 }
 
 """
 The parameters used by the account owner to update the email address
 """
 input UpdateMyEmailInput {
-  """
-  A new email address
-  """
-  newEmail: String!
+    """
+    A new email address
+    """
+    newEmail: String!
 }
 
 """
 The parameters used by the account owner to update the password
 """
 input UpdateMyPasswordInput {
-  """
-  A new password
-  """
-  newPassword: String!
+    """
+    A new password
+    """
+    newPassword: String!
 }
 
 """
 The parameters used by the auth resolver to create a new user account.
 """
 input SignUpInput {
-  """
-  A name used to identify the user. The name should be longer than 5 characters and not exceed 255 characters.
-  """
-  username: String!
+    """
+    A name used to identify the user. The name should be longer than 5 characters and not exceed 255 characters.
+    """
+    username: String!
 
-  """
-  An optional e-mail address used in the password recovery process. The email should be longer than 5 characters and not exceed 255 characters.
-  """
-  email: String
+    """
+    An optional e-mail address used in the password recovery process. The email should be longer than 5 characters and not exceed 255 characters.
+    """
+    email: String
 
-  """
-  The password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
-  """
-  password: String!
+    """
+    The password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
+    """
+    password: String!
 }
 
 """
 The parameters used by the resolver to log in the user.
 """
 input SignInInput {
-  """
-  A name used to identify the user. The name should be longer than 5 characters and not exceed 255 characters.
-  """
-  username: String!
+    """
+    A name used to identify the user. The name should be longer than 5 characters and not exceed 255 characters.
+    """
+    username: String!
 
-  """
-  The password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
-  """
-  password: String!
-}
-
-"""
-The parameters used by the auth resolver to activate the email address
-"""
-input ActivateEmailInput {
-  """
-  An authentication token
-  """
-  token: String!
+    """
+    The password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
+    """
+    password: String!
 }
 
 """
 The parameters used by the resolver to start the password recovery procedure
 """
 input ForgotPasswordInput {
-  """
-  An e-mail address used in the password recovery process. The email should be longer than 5 characters and not exceed 255 characters.
-  """
-  email: String!
-}
-
-"""
-The parameters used by the auth resolver to reset the user's password
-"""
-input ResetPasswordInput {
-  """
-  An authentication token
-  """
-  token: String!
-
-  """
-  A new password used to authenticate the user. The password should be longer than 5 characters and not exceed 255 characters.
-  """
-  newPassword: String!
+    """
+    An e-mail address used in the password recovery process. The email should be longer than 5 characters and not exceed 255 characters.
+    """
+    email: String!
 }
 
 """
 The parameters used by the sudokus resolver to create the sudoku
 """
-input CreateSudokuInput {
-  """
-  Content of the sudoku that user request to create
-  """
-  content: String!
+input AddSudokuInput {
+    """
+    Content of the sudoku that user request to create
+    """
+    content: String!
 }
 
 """
 The parameters used by the sudokus resolver to update the sudoku content
 """
 input UpdateSudokuInput {
-  """
-  ID of the sudoku whose content will be updated
-  """
-  sudokuId: ID!
+    """
+    ID of the sudoku whose content will be updated
+    """
+    sudokuId: ID!
 
-  """
-  A new content
-  """
-  sudokuContent: String!
+    """
+    A new content
+    """
+    sudokuContent: String!
 }
 
 """
 The parameters used by the sudokus resolver to remove one sudoku
 """
 input RemoveSudokuInput {
-  """
-  ID of the sudoku whose deletion is requested
-  """
-  sudokuId: ID!
+    """
+    ID of the sudoku whose deletion is requested
+    """
+    sudokuId: ID!
 }
 
 """
 The parameters used by the sudokus resolver to toggle the sudoku like
 """
-input ToggleFavoriteSudokuInput {
-  """
-  ID of the sudoku that the user toggle like
-  """
-  sudokuId: ID!
+input ToggleFavouriteSudokuInput {
+    """
+    ID of the sudoku that the user toggle like
+    """
+    sudokuId: ID!
+}
+
+"""
+The parameters used by the auth resolver to activate the email address
+"""
+input ActivateEmailInput {
+    """
+    An activation token
+    """
+    token: String!
 }
