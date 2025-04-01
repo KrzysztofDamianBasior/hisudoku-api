@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Activation of e-mail address on the HiSudoku service</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<style media="all" type="text/css">
+        body {
+          font-family: Helvetica, sans-serif;
+          font-size: 16px;
+          line-height: 1.3;
+
+          background-color: #f4f5f6;
+
+          margin: 0;
+          padding: 0;
+
+          width: 100%;
+          height: 100%;
+        }
+
+        .container {
+          margin: 0 auto !important;
+
+          padding: 0;
+          padding-top: 24px;
+
+          max-width: 600px;
+        }
+
+        .main {
+          background: #ffffff;
+          border: 1px solid #eaebed;
+          border-radius: 16px;
+
+          padding: 24px;
+          margin: 0 auto;
+
+          width: 100%;
+        }
+
+        .footer {
+          padding-top: 18px;
+          text-align: center;
+          width: 100%;
+        }
+
+        .footer em, .footer span, .footer a {
+          color: #9a9ea6;
+          font-size: 16px;
+          text-align: center;
+        }
+
+        a {
+          color: #0867ec;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+</style>
+<body class="body">
+<div class="container">
+    <main class="main">
+        <p data-th-utext="#{mail.activate-email.greetings(${userName?:'HiSudoku user'})}">Hi username</p>
+        <p data-th-text="#{mail.activate-email.activate-request}">
+            Your email address was provided on our website, by one of our users, as the default correspondence address.
+            If it was you, please click the link below to activate this address on our website. If it was not you who
+            provided this email address on our website, please ignore this message.
+        </p>
+
+        <a data-th-href="${activationLink}">
+                <span>
+                    <span data-th-text="#{mail.activate-email.link}">Activate your email</span>
+                </span>
+        </a>
+
+        <p style="text-align: left;">
+                <span data-th-utext="#{mail.activate-email.expire-info}">
+                    This link will expire <strong>in 5 minutes.</strong> If you are not a user of our website, we apologize for the unwanted correspondence, unfortunately someone has provided your email address as a correspondence address, please ignore this message.
+                </span>
+        </p>
+    </main>
+
+    <footer class="footer">
+        <span>Regards, </span>
+        <br/>
+        <em>HiSudoku service support</em>
+    </footer>
+</div>
+</body>
+</html>
