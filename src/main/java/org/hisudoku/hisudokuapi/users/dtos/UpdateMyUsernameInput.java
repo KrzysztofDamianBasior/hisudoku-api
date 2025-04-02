@@ -13,7 +13,8 @@ public class UpdateMyUsernameInput {
     @NotBlank()
     @ConfigurableSize(
             maxProperty = "application.validation.max-username-length",
-            minProperty = "application.validation.min-username-length"
+            minProperty = "application.validation.min-username-length",
+            fieldName = "newUsername"
     )
     private String newUsername;
 }

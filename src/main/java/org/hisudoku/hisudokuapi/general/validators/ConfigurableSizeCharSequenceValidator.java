@@ -12,6 +12,7 @@ public class ConfigurableSizeCharSequenceValidator implements ConstraintValidato
     private final PropertyResolver propertyResolver;
     private int min;
     private int max;
+    private String fieldName;
 
     @Autowired
     public ConfigurableSizeCharSequenceValidator(PropertyResolver propertyResolver) {
@@ -22,6 +23,7 @@ public class ConfigurableSizeCharSequenceValidator implements ConstraintValidato
     public void initialize(ConfigurableSize configurableSize) {
         String minProperty = configurableSize.minProperty();
         String maxProperty = configurableSize.maxProperty();
+        this.fieldName = configurableSize.fieldName();
         this.min = "".equals(minProperty) ? 0 : propertyResolver.getRequiredProperty(minProperty, Integer.class);
         this.max = "".equals(maxProperty) ? Integer.MAX_VALUE : propertyResolver.getRequiredProperty(maxProperty, Integer.class);
         validateParameters();
@@ -47,31 +49,14 @@ public class ConfigurableSizeCharSequenceValidator implements ConstraintValidato
             boolean retVal = length >= this.min && length <= this.max;
             if (!retVal) {
                 HibernateConstraintValidatorContext hibernateContext = context.unwrap(HibernateConstraintValidatorContext.class);
-                hibernateContext.addMessageParameter("min", this.min).addMessageParameter("max", this.max);
+                hibernateContext.addMessageParameter("min", this.min).addMessageParameter("max", this.max).addMessageParameter("fieldName", this.fieldName);
                 hibernateContext.disableDefaultConstraintViolation();
                 hibernateContext
 //                        .buildConstraintViolationWithTemplate("{javax.validation.constraints.Size.message}")
 //                        .buildConstraintViolationWithTemplate("{jakarta.validation.constraints.Size.message}")
-                        .buildConstraintViolationWithTemplate("{ConfigurableSizeCharSequenceValidator}")
+                        .buildConstraintViolationWithTemplate("{validation.configurable-size-char-sequence-validator}")
                         .addConstraintViolation();
             }
-            //        ValidationMessages_en_US.properties
-            //        SomeObject.code.first=Illegal link value
-            //        SomeObject.code.second=Error message: {error.code}
-            //
-            //        if (parameter==1){
-            //            context.disableDefaultConstraintViolation();
-            //            context.buildConstraintViolationWithTemplate("SomeObject.code.first").addConstraintViolation();
-            //            context.buildConstraintViolationWithTemplate("{SomeObject.code.first}").addConstraintViolation();
-            //            return false;
-            //        }
-            //        if (parameter==2){
-            //            context.disableDefaultConstraintViolation();
-            //            context.buildConstraintViolationWithTemplate("SomeObject.code.second").addConstraintViolation();
-            //            context.buildConstraintViolationWithTemplate("{SomeObject.code.second}").addConstraintViolation();
-            //            return false;
-            //        }
-            //        return true;
             return retVal;
         }
     }

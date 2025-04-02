@@ -13,7 +13,8 @@ public class UpdateMyPasswordInput {
     @NotBlank
     @ConfigurableSize(
             maxProperty = "application.validation.max-password-length",
-            minProperty = "application.validation.min-password-length"
+            minProperty = "application.validation.min-password-length",
+            fieldName = "newPassword"
     )
     private String newPassword;
 }

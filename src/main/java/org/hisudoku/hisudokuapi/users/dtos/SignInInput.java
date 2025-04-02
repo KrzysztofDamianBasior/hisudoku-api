@@ -13,14 +13,16 @@ public class SignInInput {
     @NotBlank(message = "{sign-up-input.username.not-blank}")
     @ConfigurableSize(
             maxProperty = "application.validation.max-username-length",
-            minProperty = "application.validation.min-username-length"
+            minProperty = "application.validation.min-username-length",
+            fieldName = "username"
     )
     private String username;
 
     @NotBlank(message = "{sign-up-input.password.not-blank}")
     @ConfigurableSize(
             maxProperty = "application.validation.max-password-length",
-            minProperty = "application.validation.min-password-length"
+            minProperty = "application.validation.min-password-length",
+            fieldName = "password"
     )
     private String password;
 }

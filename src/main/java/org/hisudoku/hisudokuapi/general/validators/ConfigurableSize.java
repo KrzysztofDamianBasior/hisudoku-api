@@ -21,6 +21,8 @@ public @interface ConfigurableSize {
 
     String maxProperty() default ""; // default "{application.validation.max-username-length}";
 
+    String fieldName() default "";
+
     @Target({ElementType.METHOD, ElementType.FIELD, ElementType.ANNOTATION_TYPE, ElementType.CONSTRUCTOR, ElementType.PARAMETER, ElementType.TYPE_USE})
     @Retention(RetentionPolicy.RUNTIME)
     @Documented // @Documented is a meta-annotation. You apply @Documented when defining an annotation, to ensure that classes using your annotation show this in their generated JavaDoc.
