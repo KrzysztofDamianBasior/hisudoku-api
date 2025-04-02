@@ -21,6 +21,7 @@ import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
+import com.mongodb.client.result.DeleteResult;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -54,10 +55,17 @@ public class SudokuComplexQueriesRepository {
         return Optional.ofNullable(mongoTemplate.findAndRemove(query, Sudoku.class));
     }
 
+    public long removeManyByAuthor(String authorId) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("authorId").is(authorId)); //  _id: { $in: ids } }
+        DeleteResult result = mongoTemplate.remove(query, Sudoku.class);
+        return result.getDeletedCount();
+    }
+
     public SudokuFeedModel findMany(int limit, String cursor) {
         Query query = new Query();
 
-        query.addCriteria(Criteria.where("_id").lt(cursor)); // take younger than cursor
+        query.addCriteria(Criteria.where("_id").lte(cursor)); // take younger than cursor
         query.limit(limit + 1);
         // By utilizing the sort() method, we can organize our query results in either ascending (1) or descending (-1) order based on one or more fields.
         // db.topics.find().sort({ bump_date: -1 })

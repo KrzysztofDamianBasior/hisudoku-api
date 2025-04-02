@@ -11,6 +11,7 @@ import org.hisudoku.hisudokuapi.sudokus.models.SudokuFeedModel;
 import org.hisudoku.hisudokuapi.sudokus.models.SudokuModel;
 import org.hisudoku.hisudokuapi.sudokus.services.SudokusService;
 import org.hisudoku.hisudokuapi.users.models.HSUserPrincipal;
+import org.hisudoku.hisudokuapi.users.models.MessageResponseModel;
 import org.hisudoku.hisudokuapi.users.models.UserFeedModel;
 import org.hisudoku.hisudokuapi.users.models.UserModel;
 
@@ -31,6 +32,7 @@ import lombok.RequiredArgsConstructor;
 public class SudokuResolver {
     private final SudokusService sudokusService;
 
+    @PreAuthorize("permitAll()")
     @SchemaMapping(typeName = "Query", field = "sudokuFeed")
     public SudokuFeedModel sudokuFeed(
             // By default, input arguments in GraphQL are nullable and optional, which means an argument can be set to the null literal, or not provided at all.
@@ -51,6 +53,7 @@ public class SudokuResolver {
         return this.sudokusService.sudokuFeed(sudokusLimit, sudokuCursor);
     }
 
+    @PreAuthorize("permitAll()")
     @SchemaMapping(typeName = "Query", field = "sudoku")
     public SudokuModel getOne(
             @Argument @Size(min = 24, message = "{validation.mongo-id.size.too-short}") @Size(max = 24, message = "{validation.mongo-id.size.too-long}") @NotBlank String sudokuId,
@@ -68,7 +71,7 @@ public class SudokuResolver {
         return this.sudokusService.findOne(sudokuId);
     }
 
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('user:create') or hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @SchemaMapping(typeName = "Mutation", field = "createSudoku")
     public SudokuModel createSudoku(
             @Argument @Valid AddSudokuInput addSudokuInput,
@@ -89,7 +92,7 @@ public class SudokuResolver {
         return this.sudokusService.addSudoku(principal, addSudokuInput);
     }
 
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('user:update') or hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @SchemaMapping(typeName = "Mutation", field = "updateSudoku")
     public SudokuModel updateSudoku(
             @Argument @Valid UpdateSudokuInput updateSudokuInput,
@@ -111,9 +114,9 @@ public class SudokuResolver {
         return this.sudokusService.updateSudokuContent(principal, updateSudokuInput);
     }
 
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('user:delete') or hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @SchemaMapping(typeName = "Mutation", field = "removeSudoku")
-    public SudokuModel removeSudoku(
+    public MessageResponseModel removeSudoku(
             @Argument @Valid RemoveSudokuInput removeSudokuInput,
             DataFetchingEnvironment env,
             GraphQLContext graphQLContext,
@@ -132,6 +135,7 @@ public class SudokuResolver {
         return this.sudokusService.remove(principal, removeSudokuInput);
     }
 
+    @PreAuthorize("hasAuthority('user:update') or hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
     @SchemaMapping(typeName = "Mutation", field = "toggleFavoriteSudoku")
     public SudokuModel toggleFavorite(
             @Argument @Valid ToggleFavouriteSudokuInput toggleFavouriteSudokuInput,

@@ -259,7 +259,7 @@ type Mutation {
     updateOneUsername(updateOneUsernameInput: UpdateOneUsernameInput!): UserModel!
 
     "A mutation that removes one of the users\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-    removeOneUser(removeOneInput: RemoveOneInput!): UserModel!
+    removeOneUser(removeOneInput: RemoveOneInput!): MessageResponse!
 
     "A mutation that grants an user administrator privileges\n only for logged in, required roles: [Admin]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
     grantAdminPermissions(
@@ -270,7 +270,7 @@ type Mutation {
     updateMyUsername(updateMyUsernameInput: UpdateMyUsernameInput!): AccountModel!
 
     "A mutation available only to the account owner that starts the process of updating the e-mail address\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-    updateMyEmail(updateMyEmailInput: UpdateMyEmailInput!): AccountModel!
+    updateMyEmail(updateMyEmailInput: UpdateMyEmailInput!): MessageResponse!
 
     "A mutation available only to the account owner that updates the password\n only for logged in, required roles: [User]\n    Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
     updateMyPassword(updateMyPasswordInput: UpdateMyPasswordInput!): AccountModel!
@@ -279,13 +279,13 @@ type Mutation {
     activateEmail(activateEmailInput: ActivateEmailInput!): AccountModel!
 
     "A mutation available only to the account owner that removes the account\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-    removeMyAccount: AccountModel!
+    removeMyAccount: MessageResponse!
 
     "A mutation that allows the user to create an account\n no authentication required, no required roles, no extra http headers\n"
-    singUp(signUpInput: SignUpInput!): AuthResponse!
+    signUp(signUpInput: SignUpInput!): AuthResponse!
 
     "A mutation that allows the user to authenticate himself\n no authentication required, no required roles, no extra http headers\n"
-    singIn(signInInput: SignInInput!): AuthResponse!
+    signIn(signInInput: SignInInput!): AuthResponse!
 
     "A mutation that starts the user's password recovery procedure\n no authentication required, no required roles, no extra http headers\n"
     forgotPassword(forgotPasswordInput: ForgotPasswordInput!): MessageResponse!
@@ -297,7 +297,7 @@ type Mutation {
     updateSudoku(updateSudokuInput: UpdateSudokuInput!): SudokuModel!
 
     "A mutation that remove sudoku if the user is the author of the sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-    removeSudoku(removeSudokuInput: RemoveSudokuInput!): SudokuModel!
+    removeSudoku(removeSudokuInput: RemoveSudokuInput!): MessageResponse!
 
     "A mutation that toggle sudoku like\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
     toggleFavoriteSudoku(

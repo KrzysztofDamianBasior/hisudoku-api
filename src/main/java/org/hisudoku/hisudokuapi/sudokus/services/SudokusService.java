@@ -14,6 +14,7 @@ import org.hisudoku.hisudokuapi.sudokus.repositories.SudokuComplexQueriesReposit
 import org.hisudoku.hisudokuapi.users.entities.HSUser;
 import org.hisudoku.hisudokuapi.users.enums.Role;
 import org.hisudoku.hisudokuapi.users.models.HSUserPrincipal;
+import org.hisudoku.hisudokuapi.users.models.MessageResponseModel;
 import org.hisudoku.hisudokuapi.users.models.UserFeedModel;
 import org.hisudoku.hisudokuapi.users.models.UserModel;
 import org.hisudoku.hisudokuapi.users.services.HSUserUtils;
@@ -67,13 +68,13 @@ public class SudokusService {
         return SudokuUtils.mapToSudokuModelFavouritedByNullAuthorNullDTO(sudoku);
     }
 
-    public SudokuModel remove(HSUserPrincipal principal, RemoveSudokuInput removeSudokuInput){
+    public MessageResponseModel remove(HSUserPrincipal principal, RemoveSudokuInput removeSudokuInput){
         this.verifySudokuAuthor(principal.getId(), principal.getRole(), removeSudokuInput.getSudokuId());
 
         Sudoku sudoku = this.sudokuComplexQueriesRepository.removeOneById(removeSudokuInput.getSudokuId())
                 .orElseThrow(()-> new OperationFailedException("remove one sudoku"));
 
-        return SudokuUtils.mapToSudokuModelFavouritedByNullAuthorNullDTO(sudoku);
+        return new MessageResponseModel("removed sudoku with id: " + sudoku.getId());
     }
 
     public SudokuModel toggleFavorite(HSUserPrincipal principal, ToggleFavouriteSudokuInput toggleFavouriteSudokuInput){
