@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-// org.trickyplay.trickyplayapi.general.handlers.GlobalExceptionHandler uses @ControllerAdvice and @ExceptionHandler to handle all the exception to a REST Api. It works fine for exceptions thrown by web mvc controllers, but it does not work for exceptions thrown by spring security custom filters because they run before the controller methods are invoked. The GlobalExceptionHandler will only work if the request is handled by the DispatcherServlet. However, custom security filter (that does a token based auth) exception occurs before that as it is thrown by a Filter
+// GlobalExceptionHandler works fine for exceptions thrown by web mvc controllers, but it does not work for exceptions thrown by spring security custom filters because they run before the controller methods are invoked. The GlobalExceptionHandler will only work if the request is handled by the DispatcherServlet. However, custom security filter (that does a token based auth) exception occurs before that as it is thrown by a Filter
 @Component
 @Slf4j
 public class UnauthorizedHandler implements AuthenticationEntryPoint { // JwtAuthEntryPoint
