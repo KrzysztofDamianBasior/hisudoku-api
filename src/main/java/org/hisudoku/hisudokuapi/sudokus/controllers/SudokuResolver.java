@@ -72,8 +72,8 @@ public class SudokuResolver {
     }
 
     @PreAuthorize("hasAuthority('user:create') or hasRole('ROLE_USER') or hasRole('ROLE_ADMIN')")
-    @SchemaMapping(typeName = "Mutation", field = "createSudoku")
-    public SudokuModel createSudoku(
+    @SchemaMapping(typeName = "Mutation", field = "addSudoku")
+    public SudokuModel addSudoku(
             @Argument @Valid AddSudokuInput addSudokuInput,
             DataFetchingEnvironment env,
             GraphQLContext graphQLContext,

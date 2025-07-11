@@ -252,6 +252,23 @@ type Query {
         """
         sudokuId: ID!
     ): SudokuModel!
+
+    "A query verifying the status of the user's reaction to the selected sudoku\n only for logged in, no required roles\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    doesUserLikeSudoku(
+        """
+        ID of the the sudoku that is being checked
+        """
+        sudokuId: ID!
+    ): Boolean!
+
+
+    "A query verifying the status of the user's reaction to the selected sudokus\n only for logged in, no required roles\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
+    doesUserLikeSudokus(
+        """
+        IDs of the the sudokus that are being checked
+        """
+        sudokusIds: [ID]!
+    ): [Boolean]!
 }
 
 type Mutation {
@@ -291,7 +308,7 @@ type Mutation {
     forgotPassword(forgotPasswordInput: ForgotPasswordInput!): MessageResponse!
 
     "A mutation that create sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n    {\n      \"Authorization\": \"Bearer your-JWT\"\n    }\n"
-    createSudoku(addSudokuInput: AddSudokuInput!): SudokuModel!
+    addSudoku(addSudokuInput: AddSudokuInput!): SudokuModel!
 
     "A mutation that update sudoku if the user is the author of the sudoku\n only for logged in, required roles: [User]\n Bearer authentication\n HTTP Headers:\n      {\n        \"Authorization\": \"Bearer your-JWT\"\n      }\n"
     updateSudoku(updateSudokuInput: UpdateSudokuInput!): SudokuModel!
