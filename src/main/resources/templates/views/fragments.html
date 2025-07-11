@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en" data-th-fragment="skeleton(content)" class="w-full h-full">
+<head>
+    <meta charset="UTF-8">
+    <title>HiSudoku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+</head>
+<body class="bg-gradient-to-tr from-slate-900 to-slate-600 w-full h-full">
+<header class="w-full static top-0 left-0">
+    <nav class="w-full flex items-center justify-between relative">
+        <div>
+            <a
+                    class="font-semibold text-xl text-white cursor-pointer focus:outline-none focus:opacity-80 px-3 focus:ring-4"
+                    aria-label="Brand"
+                    data-th-href="@{/}"
+            >
+                HiSudoku
+            </a>
+        </div>
+        <!-- Collapse Button -->
+        <div class="md:hidden">
+            <button
+                    onclick="onToggleMenu(this)"
+                    name="menu"
+                    type="button"
+                    class="size-9 mx-3 my-1 flex justify-center items-center text-sm font-semibold rounded-lg border border-white/50 text-white hover:bg-white/10 focus:bg-white/10 focus:ring-4"
+                    id="hs-base-header-collapse"
+                    aria-expanded="false"
+                    aria-controls="hs-base-header"
+                    aria-label="Toggle navigation"
+                    data-hs-collapse="#hs-base-header">
+                <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="size-6">
+                    <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M3.75 5.25h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5m-16.5 4.5h16.5"
+                    />
+                </svg>
+                <span class="sr-only">Toggle navigation</span>
+            </button>
+        </div>
+        <!-- End Collapse Button -->
+
+        <!-- Collapse -->
+        <div
+                id="hs-base-header"
+                class="nav-links absolute min-h-[60vh] top-[100%] duration-500 bg-transparent md:static md:min-h-fit md:px-3 md:flex md:py-0 md:flex-row md:items-center md:justify-end md:gap-0.5 md:translate-x-0 -translate-x-full"
+                aria-labelledby="hs-base-header-collapse"
+        >
+            <a
+                    class="px-2 py-1 m-1 flex items-center text-sm text-white/80 hover:text-white focus:outline-none focus:text-white text-center block border border-white rounded hover:border-gray-200 hover:bg-gray-800 cursor-pointer"
+                    data-th-href="@{/user}"
+            >
+                <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke-width="1.5"
+                        stroke="currentColor"
+                        class="shrink-0 size-5">
+                    <!--md:hidden-->
+                    <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+                </svg>
+                Account
+            </a>
+                <a
+                        data-sec-authorize="!isAuthenticated()"
+                        class="px-2 py-1 m-1 flex items-center text-sm text-white/80 hover:text-white focus:outline-none focus:text-white text-center block border border-white rounded hover:border-gray-200 hover:bg-gray-800 cursor-pointer"
+                        data-th-href="@{/account}">
+                    <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="shrink-0 size-5">
+                        <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75"/>
+                    </svg>
+                    Log in
+                </a>
+                <a
+                        data-sec-authorize="isAuthenticated()"
+                        class="px-2 py-1 m-1 flex items-center text-sm text-white/80 hover:text-white focus:outline-none focus:text-white text-center block border border-white rounded hover:border-gray-200 hover:bg-gray-800 cursor-pointer"
+                        data-th-href="@{/account/logout}">
+                    <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke-width="1.5"
+                            stroke="currentColor"
+                            class="shrink-0 size-5"
+                    >
+                        <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                d="M8.25 9V5.25A2.25 2.25 0 0 1 10.5 3h6a2.25 2.25 0 0 1 2.25 2.25v13.5A2.25 2.25 0 0 1 16.5 21h-6a2.25 2.25 0 0 1-2.25-2.25V15m-3 0-3-3m0 0 3-3m-3 3H15"/>
+                    </svg>
+                    Log out
+                </a>
+            </div>
+        <!-- End Collapse -->
+    </nav>
+</header>
+<section data-th-insert="${content}"></section>
+</body>
+<script>
+        const navLinks = document.querySelector('.nav-links');
+        function onToggleMenu(e) {
+            navLinks.classList.toggle('-translate-x-full');
+        }
+</script>
+</html>

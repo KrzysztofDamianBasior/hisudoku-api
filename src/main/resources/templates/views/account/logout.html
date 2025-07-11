@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en" data-th-replace="~{views/fragments::skeleton(~{::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>HiSudoku</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+</head>
+<body>
+
+<section data-th-fragment="content" class="max-w-xl mx-auto mb-4 mt-4">
+    <form data-th-action="@{/account/logout}" method="post">
+        <button
+                type="submit"
+                class="w-full py-3 px-4 text-sm text-center font-medium rounded-lg border border-slate-900 focus:outline-none shadow-sm hover:shadow-lg hover:border-slate-900 bg-gradient-to-tr from-slate-900 to-slate-600 text-white focus:ring-4 transform active:scale-y-75 transition-transform">
+            Logout
+        </button>
+    </form>
+</section>
+
+</body>
+</html>

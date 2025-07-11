@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" data-th-replace="~{views/fragments::skeleton(~{this::content})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Index</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,typography,aspect-ratio,line-clamp,container-queries"></script>
+</head>
+<body>
+<div>
+    <section data-th-fragment="content" class="w-full max-w-md mx-auto mt-12 p-6 text-center">
+        <p>Ups... There was an error!</p>
+        <p th:text="${errorMessage}">Unknown</p>
+    </section>
+</div>
+</body>
+</html>
